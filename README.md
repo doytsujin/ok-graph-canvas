@@ -41,6 +41,18 @@ copy of each rather than two.
 The build is ESM with type declarations. `src/` ships in the tarball as well, so
 a stack trace lands somewhere readable.
 
+### Styling, which differs by component
+
+`FieldCanvas` and the shape stack need **no CSS at all** — they are SVG with
+inline attributes, and colours arrive as props. Give the element a height and it
+renders.
+
+`TraceLanes` is the exception and it is worth knowing before you import it: it is
+styled with **Tailwind utility classes** and ships no stylesheet. Without Tailwind
+in the host — and with a `content` glob that reaches this package's source, or
+the classes are purged — it renders as unstyled text. That is a rough edge, not a
+design: the canvas is dependency-free and the trace view should be too.
+
 ## Usage
 
 ```tsx

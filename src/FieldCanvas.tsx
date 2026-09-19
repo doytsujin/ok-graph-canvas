@@ -218,7 +218,23 @@ export function FieldCanvas(props: FieldCanvasProps) {
   }, [hoverId, selectedId, adjacency])
 
   return (
-    <div ref={containerRef} className={className} onClick={() => onSelect?.(null)}>
+    // `position: relative` is not decoration. The Fit control is absolutely
+    // positioned, so without a containing block here it escapes to whatever
+    // ancestor happens to be positioned -- in a plain page, the viewport, which
+    // puts it in the corner of the document rather than the corner of the
+    // canvas. Inline rather than in `className` because a consumer who passes no
+    // class still needs it, and it cannot affect layout: establishing a
+    // containing block changes nothing about where this element sits.
+    //
+    // Height stays the consumer's job. The SVG is sized from this element's
+    // clientHeight, so the element needs a height from somewhere -- a class, a
+    // grid cell, a flex child. An unsized parent renders an empty canvas.
+    <div
+      ref={containerRef}
+      className={className}
+      style={{ position: 'relative' }}
+      onClick={() => onSelect?.(null)}
+    >
       {showFitControl && (
         <button
           onClick={(e) => {

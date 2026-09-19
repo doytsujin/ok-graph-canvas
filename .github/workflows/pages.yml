@@ -1,0 +1,57 @@
+# Builds the examples app and publishes it as the project site.
+#
+# The examples build against the package SOURCE rather than its dist, so the
+# site cannot show a renderer the repository does not contain. `npm run check`
+# runs first and the deploy depends on it: the vocabulary sweep covers
+# examples/ as well as src/, so a site that embedded a real domain would fail
+# here rather than ship.
+name: site
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install package
+        run: npm ci
+      - name: Vocabulary and contract checks
+        run: npm run check
+      - name: Library build
+        run: npm run build
+      - name: Install examples
+        run: npm ci
+        working-directory: examples
+      - name: Build site
+        run: npm run build
+        working-directory: examples
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: examples/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

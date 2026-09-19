@@ -414,7 +414,14 @@ function sourceFiles(dir: string): string[] {
 // failure instead of a silent success.
 const nested = join(process.cwd(), 'packages/graph-canvas')
 const pkgRoot = existsSync(join(nested, 'package.json')) ? nested : process.cwd()
-const files = sourceFiles(join(pkgRoot, 'src'))
+// The examples are published too -- they are the site -- so they are swept on
+// the same terms as src/. An example is the single most tempting place to reach
+// for a real domain, because a real one is already written down somewhere.
+const exampleSrc = join(pkgRoot, 'examples', 'src')
+const files = [
+  ...sourceFiles(join(pkgRoot, 'src')),
+  ...(existsSync(exampleSrc) ? sourceFiles(exampleSrc) : []),
+]
 check('the vocabulary sweep found the package source', files.length > 5, `${files.length} files`)
 for (const full of files) {
   const file = full.slice(pkgRoot.length + 1)
