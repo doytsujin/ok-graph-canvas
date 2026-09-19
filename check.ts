@@ -159,9 +159,9 @@ check(
 )
 check('wide field zooms out', t.k < 1, String(t.k))
 check(
-  'extent centre lands at viewport centre',
+  'extent center lands at viewport center',
   Math.abs(projectToScreen({ x: 0, y: (-599 + 480 + 56 * 0.6) / 2 }, t, W, H).x - W / 2) < 1,
-  'off centre',
+  'off center',
 )
 
 // Regression on the specific failure: the node that used to render above the
@@ -170,12 +170,12 @@ const offscreen = projectToScreen({ x: -600, y: -599 }, t, W, H)
 check('the y = -204 node is no longer above the viewport', offscreen.y >= 0, String(offscreen.y))
 
 // A long caption on a boundary node. This is the case that was clipped: the
-// fit padded by `nodeRadius` alone, captions are centred under their node and
+// fit padded by `nodeRadius` alone, captions are centered under their node and
 // this one is about three times that wide, so its left half rendered outside
 // the viewport at any scale large enough to matter.
 //
-// Asserted on the caption's extent rather than the node centre, because the
-// node centre was always on screen — that is exactly why it went unnoticed.
+// Asserted on the caption's extent rather than the node center, because the
+// node center was always on screen — that is exactly why it went unnoticed.
 // Forty-one characters, which is an ordinary length for a caption that states
 // a verdict and a number. Deliberately not a real consumer's wording: this
 // package is vocabulary-free by construction and that includes its tests.
@@ -304,7 +304,7 @@ check(
 // A single node must not zoom to the max just because its extent is tiny.
 const single = fitToExtent([{ x: 0, y: 0 }], W, H, FIT)!
 check('single node stays within scale extent', single.k <= 4 && single.k >= 0.2, String(single.k))
-check('single node is centred', Math.abs(projectToScreen({x:0,y:0}, single, W, H).x - W / 2) < 1, 'off centre')
+check('single node is centered', Math.abs(projectToScreen({x:0,y:0}, single, W, H).x - W / 2) < 1, 'off center')
 
 // "Nothing to frame" must be null, not identity — identity would yank the
 // camera to the origin on every empty update.

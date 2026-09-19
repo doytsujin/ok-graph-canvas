@@ -49,7 +49,7 @@ export interface TraceLanesProps {
 }
 
 /**
- * Colour comes from CSS custom properties with light-mode fallbacks, not from
+ * Color comes from CSS custom properties with light-mode fallbacks, not from
  * utility classes. Two reasons, and the second is the one that bites.
  *
  * A host that sets the variables gets this component in its own palette,

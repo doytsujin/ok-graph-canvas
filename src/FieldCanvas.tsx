@@ -76,7 +76,7 @@ const FIT_PADDING = 32
  * `CAPTION_SCALE` inside a group already scaled by `NODE_BASE_SIZE`, at
  * `CAPTION_FONT_PX` nominal.
  *
- * The camera needs this because captions are centred under their node and are
+ * The camera needs this because captions are centered under their node and are
  * commonly wider than the node, so framing that ignores them clips the caption
  * of any node sitting on the left or right boundary.
  */
@@ -156,7 +156,7 @@ export function FieldCanvas(props: FieldCanvasProps) {
    * Screen position of a node is `translate(t.x + w/2, t.y + h/2) scale(t.k)`
    * applied to its layout coordinate, so mapping the node extent onto the
    * viewport is: pick `k` from the ratio of the two, then translate by
-   * `-k * centre` to put the extent's middle back at the viewport's middle.
+   * `-k * center` to put the extent's middle back at the viewport's middle.
    */
   const fit = useCallback(() => {
     const svg = svgRef.current
@@ -175,7 +175,7 @@ export function FieldCanvas(props: FieldCanvasProps) {
     if (!t) return
 
     const next = zoomIdentity.translate(t.x, t.y).scale(t.k)
-    // Drive it through the behaviour rather than setting state directly, or
+    // Drive it through the behavior rather than setting state directly, or
     // the next gesture resumes from d3's stale internal transform and jumps.
     select(svg).call(z.transform as any, next)
   }, [layout, size.w, size.h])

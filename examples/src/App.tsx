@@ -48,7 +48,7 @@ function ThemeToggle() {
   }
 
   return (
-    <div className="theme" role="group" aria-label="Colour scheme">
+    <div className="theme" role="group" aria-label="Color scheme">
       {(['light', 'dark', 'system'] as Choice[]).map((c) => (
         <button
           key={c}
@@ -107,10 +107,10 @@ export default function App() {
         <section>
           <h2>A field, projected</h2>
           <p>
-            Everything below is an invented domain — a harbour issuing berth permits. It has to be
+            Everything below is an invented domain — a harbor issuing berth permits. It has to be
             invented: the renderer is vocabulary-free by construction, so an example borrowed from a
-            real system would quietly argue the opposite of the design. The harbour supplies its own
-            shapes and colours through props; the canvas looks nothing up.
+            real system would quietly argue the opposite of the design. The harbor supplies its own
+            shapes and colors through props; the canvas looks nothing up.
           </p>
 
           <div className="controls">
@@ -204,7 +204,7 @@ export default function App() {
         <section>
           <h2>The decision trace</h2>
           <p>
-            The same harbour as a causal record: a permit granted, suspended when the survey came
+            The same harbor as a causal record: a permit granted, suspended when the survey came
             back, invalidating what relied on it, then restored. Three rules the contract enforces,
             all visible here.
           </p>

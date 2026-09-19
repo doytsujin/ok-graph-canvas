@@ -1,5 +1,5 @@
 /**
- * An invented domain: a harbour that issues berth permits.
+ * An invented domain: a harbor that issues berth permits.
  *
  * Invented on purpose, and the choice matters more than it looks. This renderer
  * is vocabulary-free by construction, so every example has to be a domain the
@@ -8,7 +8,7 @@
  *
  * The field is shaped so the projections visibly disagree. Governance links
  * carry a `governance` block, provenance links carry `derived_from`, workflow
- * links carry a relation the workflow projection recognises, and the envelope
+ * links carry a relation the workflow projection recognizes, and the envelope
  * scalars are deliberately uneven -- several are left `undefined`, which is not
  * the same as 0 and is the distinction the whole envelope rests on.
  */
@@ -202,7 +202,7 @@ export const harborField: SemanticField = {
 
 /**
  * The host brings its own vocabulary. `defaultShapeResolver` knows an
- * infrastructure vocabulary the harbour does not share, so the harbour supplies
+ * infrastructure vocabulary the harbor does not share, so the harbor supplies
  * its own — which is the extension point, demonstrated rather than described.
  */
 export function harborShapeResolver(n: FieldNode): ShapeKind {
@@ -220,7 +220,7 @@ export function harborShapeResolver(n: FieldNode): ShapeKind {
   }
 }
 
-/** Lane colour by group. Colours arrive as props; the canvas looks nothing up. */
+/** Lane color by group. Colors arrive as props; the canvas looks nothing up. */
 export const groupColor: Record<string, string> = {
   authority: '#7c3aed',
   'north quay': '#0891b2',
@@ -240,7 +240,7 @@ export function colorForNode(n: FieldNode): string {
  * Note what is NOT here. No edge exists between two records merely because they
  * are adjacent in time -- every connector below was declared by the producer
  * with `caused_by` or `responds_to`. And `observed_at` differs from `timestamp`
- * on the records where the harbour learned late, which is the case the ordering
+ * on the records where the harbor learned late, which is the case the ordering
  * switch exists to expose.
  */
 export const harborTrace: DecisionTrace = {

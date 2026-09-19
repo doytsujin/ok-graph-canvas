@@ -1,7 +1,7 @@
 /**
  * Decision Trace check.
  *
- * The fixture is an INVENTED domain — harbour berth permits: a permit is
+ * The fixture is an INVENTED domain — harbor berth permits: a permit is
  * granted, is suspended, invalidates the dispatches that relied on it, and is
  * later restored — and **nothing in `trace.ts` knows that**. Every `kind` below
  * is an opaque string a profile chose, and the assertions are about ordering,
@@ -189,7 +189,7 @@ eq('a decision points at its artifact', primaryRef(refDecision)?.id, 'vessel-002
 check('and that is not the record id', primaryRef(refDecision)?.id !== refDecision.id)
 // Following a reference is uniform; the reference's own kind is what decides
 // which inspector opens. A consumer that instead dispatched on the record's
-// `kind` would be reading profile vocabulary to choose behaviour.
+// `kind` would be reading profile vocabulary to choose behavior.
 const refEvent = records.find((r) => r.id === 'w1')!
 eq('an event references itself', primaryRef(refEvent)?.id, 'w1')
 check('which is a self-reference', isSelfReference(refEvent), primaryRef(refEvent))

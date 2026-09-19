@@ -2,7 +2,7 @@
  * Semantic Link envelope → visual encoding.
  *
  * Each envelope scalar gets its own visual channel so several can be read at
- * once without collapsing into a single colour ramp:
+ * once without collapsing into a single color ramp:
  *
  * | envelope field        | channel      | reading                                  |
  * |-----------------------|--------------|------------------------------------------|

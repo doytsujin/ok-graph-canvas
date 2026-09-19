@@ -123,7 +123,7 @@ function meanIncident(
 }
 
 /**
- * Normalised BFS depth along the included link set, measured from nodes with
+ * Normalized BFS depth along the included link set, measured from nodes with
  * no included incoming link. Used by the structural projections (governance
  * inheritance, provenance lineage, workflow dependency) where "where does this
  * sit in the chain" is the question, not "how high does it score".

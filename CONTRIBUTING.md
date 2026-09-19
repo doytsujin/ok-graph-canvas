@@ -1,9 +1,9 @@
 # Contributing
 
-## Licence and sign-off
+## License and sign-off
 
 This project is Apache-2.0, and **inbound is outbound**: contributions are
-accepted under the same licence the project ships under. There is no CLA and no
+accepted under the same license the project ships under. There is no CLA and no
 closed edition — that was decided on 2026-09-19 rather than left open, because a
 contribution policy settled after the first pull request is settled by accident.
 

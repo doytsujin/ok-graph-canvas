@@ -49,8 +49,8 @@ const interpMid = (s: Springs) =>
  * envelope (see `encoding.ts` for the channel assignments).
  *
  * The arrowhead marker is keyed per edge rather than per visual state: once
- * stroke colour became a function of `policy_compat`, a shared marker id would
- * have made every arrowhead adopt the colour of whichever edge mounted first.
+ * stroke color became a function of `policy_compat`, a shared marker id would
+ * have made every arrowhead adopt the color of whichever edge mounted first.
  */
 export function GraphEdge(props: GraphEdgeProps) {
   const {

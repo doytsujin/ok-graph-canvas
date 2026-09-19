@@ -23,7 +23,7 @@ Three things live here:
 
 Nothing here is Kubernetes-shaped, and nothing imports from the host app.
 `FieldNode.kind` is an open string; per-node action affordances arrive via a
-`renderActions` render prop; colours arrive as props rather than being looked
+`renderActions` render prop; colors arrive as props rather than being looked
 up from a namespace theme. That is what lets a second consumer adopt it
 without inheriting a Kubernetes vocabulary.
 
@@ -44,7 +44,7 @@ a stack trace lands somewhere readable.
 ### Styling, which differs by component
 
 `FieldCanvas` and the shape stack need **no CSS at all** — they are SVG with
-inline attributes, and colours arrive as props. Give the element a height and it
+inline attributes, and colors arrive as props. Give the element a height and it
 renders.
 
 `TraceLanes` is the exception and it is worth knowing before you import it: it is
@@ -101,7 +101,7 @@ Built by **Alexander Chernov** — [chernov.ca](https://chernov.ca) ·
 [github.com/doytsujin](https://github.com/doytsujin) ·
 [ORCID 0009-0007-3198-2712](https://orcid.org/0009-0007-3198-2712)
 
-## Licence
+## License
 
 Apache-2.0. The shape stack is ported from
 [`weaveworks-ui-components`](https://github.com/weaveworks/ui-components),

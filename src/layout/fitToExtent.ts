@@ -10,7 +10,7 @@
  * `translate(t.x + w/2, t.y + h/2) scale(t.k)`, so a node at layout
  * coordinate `n` lands at `t.x + w/2 + t.k * n`. Framing the extent is
  * therefore: choose `k` from the ratio of viewport to extent, then translate
- * by `-k * centre` so the extent's middle sits at the viewport's middle.
+ * by `-k * center` so the extent's middle sits at the viewport's middle.
  */
 
 export interface FitExtentInput {
@@ -81,7 +81,7 @@ export const DEFAULT_FIT_OPTIONS = {
  * A measured value is used when the host supplies one. Otherwise this is an
  * estimate from character count, which is wrong for proportional text in both
  * directions — "WWW" is wider than "iii" — but is far closer than the previous
- * behaviour of assuming the caption had no width at all.
+ * behavior of assuming the caption had no width at all.
  */
 export function estimateLabelHalfWidth(
   label: string | undefined,
@@ -128,10 +128,10 @@ export function fitToExtent(
     if (!Number.isFinite(n.x) || !Number.isFinite(n.y)) continue
     seen += 1
 
-    // Pad by the node's own extent: fitting to bare centre points clips every
+    // Pad by the node's own extent: fitting to bare center points clips every
     // node that ends up on the boundary.
     //
-    // Horizontally that is not enough on its own. The caption is centred under
+    // Horizontally that is not enough on its own. The caption is centered under
     // the node and is routinely wider than the node is — a forty-character
     // caption runs to roughly three times `nodeRadius` — so a fit that padded
     // by `nodeRadius` alone clipped the caption of every node that landed on

@@ -25,7 +25,7 @@
   --line: #e7e2dd;
   --accent: #6d28d9;
   --accent-ink: #ffffff;
-  /* The banner is not the link colour. Reusing --accent for both gave a dark
+  /* The banner is not the link color. Reusing --accent for both gave a dark
      page a light-purple headline block, because an accent that reads against
      dark text is glare against light text. */
   --header-bg: #6d28d9;
@@ -94,7 +94,7 @@ body {
 
 /* Scoped to the page's own header. A bare `header` selector also matches the
    one TraceLanes renders inside the canvas, which is how this page's accent
-   colour ended up painting the component's title bar. Same for `footer`. */
+   color ended up painting the component's title bar. Same for `footer`. */
 .page-header {
   background: var(--header-bg);
   color: var(--header-ink);

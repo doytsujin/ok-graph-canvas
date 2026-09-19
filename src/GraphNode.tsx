@@ -7,7 +7,7 @@ import { NodeShape, defaultShapeResolver, type ShapeResolver } from './shapes'
 /**
  * Half-extent of a node in layout units at scale 1. Exported because
  * fit-to-extent has to pad the node bounding box by it — fitting to bare
- * centre positions clips every node on the boundary in half.
+ * center positions clips every node on the boundary in half.
  */
 export const NODE_BASE_SIZE = 56 // px radius at scale 1
 
@@ -33,11 +33,11 @@ export type GraphNodeProps = {
   pulsing?: boolean
   hovered?: boolean
   dimmed?: boolean
-  /** Primary stroke colour — supplied by the host's theming, not looked up here. */
+  /** Primary stroke color — supplied by the host's theming, not looked up here. */
   color?: string
   captionColor?: string
   /**
-   * Node-name colour. Defaults to the near-black the light canvas was drawn
+   * Node-name color. Defaults to the near-black the light canvas was drawn
    * for; a dark host must override it or the name renders invisible against
    * its own background.
    */

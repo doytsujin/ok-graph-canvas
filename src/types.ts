@@ -67,7 +67,7 @@ export interface GovernanceRef {
  * sample lineage, equipment bonds) out of the core struct.
  * See the host platform's extension-point table.
  *
- * Every scalar is normalised to [0, 1]. `undefined` means "not asserted",
+ * Every scalar is normalized to [0, 1]. `undefined` means "not asserted",
  * which is different from 0 — projections skip undefined rather than
  * treating it as a floor.
  */
@@ -84,7 +84,7 @@ export interface SemanticLinkEnvelope {
 }
 
 export interface FieldNodeMetric {
-  /** Normalised [0, 1] — drives the clipped metric fill. */
+  /** Normalized [0, 1] — drives the clipped metric fill. */
   value: number | null
   formatted?: string
   color?: string
