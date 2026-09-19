@@ -35,11 +35,20 @@ export type GraphNodeProps = {
   dimmed?: boolean
   /** Primary stroke color — supplied by the host's theming, not looked up here. */
   color?: string
+  /**
+   * Group-caption color. Defaults to `--gc-fg-muted` with the light canvas's
+   * slate as its fallback.
+   */
   captionColor?: string
   /**
-   * Node-name color. Defaults to the near-black the light canvas was drawn
-   * for; a dark host must override it or the name renders invisible against
-   * its own background.
+   * Node-name color. Defaults to `--gc-fg` with the light canvas's near-black
+   * as its fallback, so a host that sets the variables gets labels in its own
+   * palette and a host that sets nothing is unchanged.
+   *
+   * These two were the last hardcoded colors in the canvas, and they were the
+   * ones that mattered most: a near-black name on a dark surface is not a
+   * muted label, it is an invisible one, and the node it belongs to is drawn
+   * perfectly well right above it.
    */
   labelColor?: string
   shapeResolver?: ShapeResolver
@@ -71,8 +80,8 @@ export function GraphNode(props: GraphNodeProps) {
     hovered = false,
     dimmed = false,
     color = '#7c3aed',
-    captionColor = '#475569',
-    labelColor = '#0f172a',
+    captionColor = 'var(--gc-fg-muted, #475569)',
+    labelColor = 'var(--gc-fg, #0f172a)',
     shapeResolver = defaultShapeResolver,
     showCaption = true,
     onClick,
@@ -163,8 +172,13 @@ export function GraphNode(props: GraphNodeProps) {
             textAnchor="middle"
             dominantBaseline="hanging"
             transform={`scale(${CAPTION_SCALE})`}
-            fill={labelColor}
-            style={{ fontWeight: 600, pointerEvents: 'none' }}
+            // Through `style`, not the `fill` attribute. These colors may be a
+            // `var()`, and a presentation attribute is not a CSS declaration --
+            // support for substitution there is a browser-by-browser matter,
+            // and where it is missing the attribute is simply invalid and the
+            // text falls back to black. An inline style is a declaration
+            // everywhere.
+            style={{ fill: labelColor, fontWeight: 600, pointerEvents: 'none' }}
           >
             {node.label}
           </text>
@@ -173,8 +187,7 @@ export function GraphNode(props: GraphNodeProps) {
               textAnchor="middle"
               dominantBaseline="hanging"
               transform="translate(0, 0.32) scale(0.013)"
-              fill={captionColor}
-              style={{ pointerEvents: 'none' }}
+              style={{ fill: captionColor, pointerEvents: 'none' }}
             >
               {node.group}
             </text>

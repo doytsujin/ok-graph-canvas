@@ -163,6 +163,7 @@ export default function App() {
               settle={settled ? 300 : 0}
               className="field"
               showFitControl
+              showMaximizeControl
             />
           </div>
 

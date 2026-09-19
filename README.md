@@ -154,8 +154,29 @@ const registry = new ProjectionRegistry(builtinProjections)
   onSelect={setSelectedId}
   colorForNode={(n) => themes[n.group ?? 'default'].borderColor}
   renderActions={(node) => <NodeActions nodeId={node.id} />}
+  showMaximizeControl
 />
 ```
+
+### Camera controls
+
+`showFitControl` (on by default) frames the whole field and re-engages auto-fit
+after a manual zoom. `showMaximizeControl` (**off** by default) adds a Maximize
+toggle beside it: the canvas becomes `position: fixed` over the viewport until
+Escape or the same button dismisses it, and re-fits on the way in and out. The
+layout does not move — the simulation is keyed on node, link and projection
+identity, not on width and height — so maximizing changes the camera, not the
+picture.
+
+It is off by default because a component that can cover the host's whole page
+should not acquire that ability through an upgrade. Two things a host owns:
+
+- **A transformed ancestor breaks it.** `transform`, `filter`, `perspective`,
+  `contain` or `will-change` on any ancestor makes that element the containing
+  block for fixed positioning, so the expanded canvas fills *it* rather than the
+  viewport. This is a CSS rule, not a choice this component can make.
+- **Stacking.** The expanded canvas sits at `z-index: 9999`, which clears a
+  sticky header and stays below a host modal that asks for more.
 
 ## Built-in projections
 

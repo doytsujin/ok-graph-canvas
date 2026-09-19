@@ -1,9 +1,11 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
   type ReactNode,
 } from 'react'
 import { select } from 'd3-selection'
@@ -61,12 +63,43 @@ export type FieldCanvasProps = {
   autoFit?: boolean
   /** Render the "Fit" affordance that re-engages auto-fit after a manual zoom. */
   showFitControl?: boolean
+  /**
+   * Render the "Maximize" affordance, which lifts the canvas out of its box and
+   * over the whole viewport until dismissed.
+   *
+   * Off by default, unlike the Fit control: a component that can cover the
+   * host's entire page is not something a host should acquire by upgrading.
+   */
+  showMaximizeControl?: boolean
   className?: string
 }
 
 const DEFAULT_REGISTRY = new ProjectionRegistry([similarityProjection])
 
 const ZOOM_EXTENT: [number, number] = [0.2, 4]
+
+/**
+ * Stacking order of the expanded canvas.
+ *
+ * High enough to clear a host's sticky header, which is the thing it would
+ * otherwise render underneath, and deliberately not the maximum -- a host's own
+ * modal should still be able to sit above it.
+ */
+const EXPANDED_Z_INDEX = 9999
+
+/**
+ * Shared chrome for the canvas controls. Same contract as TraceLanes: variables
+ * with light fallbacks, so a host with a dark palette gets controls that belong
+ * to it, and a host that sets nothing still gets legible light ones.
+ */
+const CONTROL_STYLE: CSSProperties = {
+  fontSize: 11,
+  padding: '2px 8px',
+  borderRadius: 6,
+  border: '1px solid var(--gc-line, #cbd5e1)',
+  background: 'var(--gc-surface, rgba(255,255,255,0.9))',
+  color: 'var(--gc-fg-muted, #475569)',
+}
 /** Breathing room around the fitted extent, in screen px. */
 const FIT_PADDING = 32
 
@@ -102,6 +135,7 @@ export function FieldCanvas(props: FieldCanvasProps) {
     pulsingIds,
     autoFit = true,
     showFitControl = true,
+    showMaximizeControl = false,
     className = 'w-full h-full bg-gradient-to-b from-slate-50 to-slate-100 relative overflow-hidden',
   } = props
 
@@ -110,6 +144,7 @@ export function FieldCanvas(props: FieldCanvasProps) {
   const [size, setSize] = useState({ w: 1200, h: 800 })
   const [transform, setTransform] = useState<ZoomTransform>(zoomIdentity)
   const [hoverId, setHoverId] = useState<string | null>(null)
+  const [expanded, setExpanded] = useState(false)
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -195,6 +230,67 @@ export function FieldCanvas(props: FieldCanvasProps) {
     autoFitRef.current = true
   }, [autoFit, fieldKey, projection])
 
+  /**
+   * Leave the expanded view, from the keyboard and without scrolling the page.
+   *
+   * A view that covers the viewport and can only be dismissed by finding its own
+   * button again is a trap: the reader may well have scrolled somewhere else
+   * before maximizing, and the page behind is no longer reachable to scroll
+   * back. Escape is the exit; the body scroll lock is what keeps the page
+   * underneath from drifting while it is unreachable.
+   */
+  useEffect(() => {
+    if (!expanded) return
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      autoFitRef.current = true
+      setExpanded(false)
+    }
+    window.addEventListener('keydown', onKey)
+
+    // Restore the previous value rather than clearing it: a host that sets its
+    // own overflow on the body must get that back, not `visible`.
+    const body = document.body
+    const previousOverflow = body.style.overflow
+    body.style.overflow = 'hidden'
+
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      body.style.overflow = previousOverflow
+    }
+  }, [expanded])
+
+  /**
+   * Measure the box directly when it is lifted or returned, instead of waiting
+   * for the ResizeObserver.
+   *
+   * RO delivers its callback at the end of the frame, so the expanded canvas
+   * paints once at its old size and only then re-fits -- and under a throttled
+   * renderer the callback may not arrive at all, which leaves the field drawn at
+   * its in-page scale in the corner of a full viewport. Reading clientWidth here
+   * forces the layout that has already been asked for and gets the fit into the
+   * same frame as the expansion. The observer stays for the case it is actually
+   * for: the host resizing the box underneath us.
+   */
+  useLayoutEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    setSize({ w: el.clientWidth, h: el.clientHeight })
+  }, [expanded])
+
+  const toggleExpanded = useCallback(() => {
+    // Hand the camera back to auto-fit before the box changes size. The resize
+    // arrives asynchronously through the ResizeObserver, and the auto-fit effect
+    // runs off the new dimensions -- so re-engaging here is what makes the field
+    // fill the viewport it was just given, rather than sitting at its old scale
+    // in the corner of a much larger box. The layout itself does not move: the
+    // simulation is keyed on the node, link and projection identity, not on
+    // width and height, so nothing re-scatters on the way in or out.
+    autoFitRef.current = true
+    setExpanded((v) => !v)
+  }, [])
+
   const adjacency = useMemo(() => {
     const map = new Map<string, Set<string>>()
     if (!field) return map
@@ -232,35 +328,73 @@ export function FieldCanvas(props: FieldCanvasProps) {
     <div
       ref={containerRef}
       className={className}
-      style={{ position: 'relative' }}
+      style={
+        expanded
+          ? {
+              position: 'fixed',
+              inset: 0,
+              // Width and height are restated because the consumer's class
+              // almost certainly carries its own -- `height: 30rem` on a class
+              // would otherwise survive into the expanded view and pin a
+              // full-width strip to the top of the screen.
+              width: '100%',
+              height: '100%',
+              zIndex: EXPANDED_Z_INDEX,
+              borderRadius: 0,
+              // The element has left its parent box, so whatever background the
+              // page gave that box is gone and the field would draw straight
+              // over the page's own text. This overrides any background in
+              // `className` for as long as the view is expanded.
+              background: 'var(--gc-surface, #ffffff)',
+            }
+          : { position: 'relative' }
+      }
       onClick={() => onSelect?.(null)}
     >
-      {showFitControl && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            autoFitRef.current = true
-            fit()
-          }}
-          title="Fit the whole field in view"
+      {(showFitControl || showMaximizeControl) && (
+        <div
           style={{
             position: 'absolute',
             right: 8,
             top: 8,
             zIndex: 1,
-            fontSize: 11,
-            padding: '2px 8px',
-            borderRadius: 6,
-            // Same contract as TraceLanes: variables with light fallbacks, so a
-            // host with a dark palette gets a control that belongs to it, and a
-            // host that sets nothing still gets a legible light one.
-            border: '1px solid var(--gc-line, #cbd5e1)',
-            background: 'var(--gc-surface, rgba(255,255,255,0.9))',
-            color: 'var(--gc-fg-muted, #475569)',
+            display: 'flex',
+            gap: 6,
           }}
         >
-          Fit
-        </button>
+          {showFitControl && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                autoFitRef.current = true
+                fit()
+              }}
+              title="Fit the whole field in view"
+              style={CONTROL_STYLE}
+            >
+              Fit
+            </button>
+          )}
+          {showMaximizeControl && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                toggleExpanded()
+              }}
+              aria-pressed={expanded}
+              title={
+                expanded
+                  ? 'Return the field to the page (Esc)'
+                  : 'Expand the field to fill the viewport'
+              }
+              style={CONTROL_STYLE}
+            >
+              {expanded ? 'Exit' : 'Maximize'}
+            </button>
+          )}
+        </div>
       )}
       <svg ref={svgRef} width={size.w} height={size.h} style={{ display: 'block' }}>
         <g
