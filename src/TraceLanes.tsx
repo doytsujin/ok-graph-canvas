@@ -144,21 +144,20 @@ export function TraceLanes({
     trace.lanes.find((l) => l.id === id)?.label ?? id
 
   return (
-    <div className={`flex flex-col min-h-0 ${className}`}>
+    <div className={`gc-trace ${className}`}>
       <header
-        className="px-3 py-2 border-b flex items-center gap-3 flex-wrap"
+        className="gc-trace-header"
         style={{ borderColor: LINE }}
       >
-        <div className="text-sm font-medium" style={{ color: FG }}>
+        <div className="gc-trace-title" style={{ color: FG }}>
           Decision trace
         </div>
-        <label className="text-[11px] flex items-center gap-1" style={{ color: MUTED }}>
+        <label className="gc-trace-order" style={{ color: MUTED }}>
           ordered by
           <select
             value={order}
             onChange={(e) => onOrderChange?.(e.target.value as TraceOrdering)}
             disabled={!onOrderChange}
-            className="text-[11px] border rounded px-1 py-0.5"
             style={{ borderColor: LINE, background: SURFACE, color: FG }}
           >
             {orderings.map((o) => (
@@ -169,12 +168,12 @@ export function TraceLanes({
           </select>
         </label>
         {trace.meta?.truncated && (
-          <span className="text-[11px]" style={{ color: WARN }}>
+          <span className="gc-trace-note" style={{ color: WARN }}>
             truncated — older records are not shown
           </span>
         )}
         {trace.meta?.source && (
-          <span className="text-[11px] ml-auto" style={{ color: FAINT }}>
+          <span className="gc-trace-source" style={{ color: FAINT }}>
             {trace.meta.source}
           </span>
         )}
@@ -182,27 +181,27 @@ export function TraceLanes({
 
       {gaps.length > 0 && (
         <div
-          className="mx-3 mt-3 p-2 rounded border text-[12px]"
+          className="gc-trace-gaps"
           style={TONE_STYLE.negative}
         >
-          <div className="font-medium">
+          <div className="gc-strong">
             {gaps.length === 1 ? 'One subject is' : `${gaps.length} subjects are`} described
             differently by different lanes
           </div>
           {gaps.map((g) => (
-            <div key={g.subject} className="mt-1.5">
-              <div className="text-[11px] font-mono">{g.subject}</div>
+            <div key={g.subject} className="gc-gap">
+              <div className="gc-gap-subject">{g.subject}</div>
               {/* Every lane that asserted, including the ones that agreed: that
                   two of three agree is itself diagnostic, and a renderer that
                   printed only the difference would throw it away. No lane is
                   named as being at fault — which lane is authoritative is a
                   profile's judgement, and the artifacts explain why. */}
-              <table className="mt-0.5 text-[11px]">
+              <table className="gc-gap-table">
                 <tbody>
                   {g.states.map((s) => (
                     <tr key={s.lane}>
-                      <td className="pr-3 opacity-70">{laneLabel(s.lane)}</td>
-                      <td className="font-medium">{s.state}</td>
+                      <td >{laneLabel(s.lane)}</td>
+                      <td className="gc-strong">{s.state}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -212,33 +211,33 @@ export function TraceLanes({
         </div>
       )}
 
-      <div className="flex-1 overflow-auto min-h-0 p-3">
-        <div className="min-w-max">
+      <div className="gc-trace-body">
+        <div className="gc-lanes">
           {rows.map(({ lane, records }) => (
             <div
               key={lane.id}
-              className="flex items-stretch border-b last:border-b-0"
+              className="gc-lane"
               style={{ borderColor: LINE_SOFT }}
             >
-              <div className="w-40 flex-shrink-0 py-2 pr-3">
-                <div className="text-[12px] font-medium" style={{ color: FG }}>
+              <div className="gc-lane-label">
+                <div className="gc-lane-name" style={{ color: FG }}>
                   {lane.label}
                 </div>
                 {lane.description && (
-                  <div className="text-[10px] leading-tight" style={{ color: FAINT }}>
+                  <div className="gc-lane-desc" style={{ color: FAINT }}>
                     {lane.description}
                   </div>
                 )}
                 {records.length === 0 && (
                   // A lane nobody produced is not an empty lane, and saying so
                   // costs one line.
-                  <div className="text-[10px] italic mt-1" style={{ color: FAINT }}>
+                  <div className="gc-lane-empty" style={{ color: FAINT }}>
                     nothing recorded
                   </div>
                 )}
               </div>
               <div
-                className="flex-1 grid gap-2 py-2"
+                className="gc-lane-grid"
                 style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(9rem, 1fr))` }}
               >
                 {records.map((r) => {
@@ -266,25 +265,25 @@ export function TraceLanes({
                           ? { outline: `2px solid ${FAINT}`, outlineOffset: '1px' }
                           : {}),
                       }}
-                      className="text-left rounded border px-2 py-1 cursor-pointer"
+                      className="gc-record"
                     >
-                      <div className="text-[11px] font-medium truncate">{r.label ?? r.kind}</div>
+                      <div className="gc-record-kind">{r.label ?? r.kind}</div>
                       {r.subject && (
-                        <div className="text-[10px] font-mono opacity-70 truncate">{r.subject}</div>
+                        <div className="gc-record-subject">{r.subject}</div>
                       )}
                       {r.state_after !== undefined && (
-                        <div className="text-[10px] mt-0.5">
+                        <div className="gc-record-state">
                           {r.state_before !== undefined && (
-                            <span className="opacity-60">{r.state_before} → </span>
+                            <span >{r.state_before} → </span>
                           )}
-                          <span className="font-medium">{r.state_after}</span>
+                          <span className="gc-strong">{r.state_after}</span>
                         </div>
                       )}
                       {r.source && (
-                        <div className="text-[10px] opacity-60 truncate">{r.source}</div>
+                        <div className="gc-record-meta">{r.source}</div>
                       )}
                       {causes.length > 0 && (
-                        <div className="text-[10px] opacity-70 mt-0.5">
+                        <div className="gc-record-cause">
                           {/* Named, never inferred. An id we do not hold is
                               labelled as outside the window rather than hidden,
                               and is not offered as something to click. */}
@@ -301,7 +300,7 @@ export function TraceLanes({
                                       e.stopPropagation()
                                       onSelect?.(cause)
                                     }}
-                                    className="underline underline-offset-2"
+                                    className="gc-link"
                                   >
                                     {cause.label ?? cause.kind}
                                   </button>
@@ -314,7 +313,7 @@ export function TraceLanes({
                         </div>
                       )}
                       {affects.length > 0 && (
-                        <div className="text-[10px] opacity-70 mt-0.5">
+                        <div className="gc-record-cause">
                           affected {affects.length} later record
                           {affects.length === 1 ? '' : 's'}
                         </div>
@@ -329,7 +328,7 @@ export function TraceLanes({
       </div>
 
       <footer
-        className="px-3 py-1.5 border-t text-[10px] flex gap-4 flex-wrap"
+        className="gc-trace-footer"
         style={{ borderColor: LINE, color: MUTED }}
       >
         <span>{trace.records.length} records</span>

@@ -13,9 +13,21 @@ export default defineConfig({
   base: process.env.SITE_BASE ?? '/ok-graph-canvas/',
   plugins: [react()],
   resolve: {
-    alias: {
-      '@agent-scope-ca/graph-canvas': fileURLToPath(new URL('../src/index.ts', import.meta.url)),
-    },
+    // Array form, and the order matters: the stylesheet subpath has to match
+    // before the bare specifier, or `@agent-scope-ca/graph-canvas/styles.css`
+    // resolves to `src/index.ts/styles.css` and the build fails on ENOTDIR.
+    // A real consumer gets both from the package's own exports map; here they
+    // are two aliases because the examples build against source.
+    alias: [
+      {
+        find: '@agent-scope-ca/graph-canvas/styles.css',
+        replacement: fileURLToPath(new URL('../styles.css', import.meta.url)),
+      },
+      {
+        find: '@agent-scope-ca/graph-canvas',
+        replacement: fileURLToPath(new URL('../src/index.ts', import.meta.url)),
+      },
+    ],
   },
   build: { outDir: 'dist', emptyOutDir: true },
 })

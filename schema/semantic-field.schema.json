@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://doytsujin.github.io/ok-graph-canvas/schema/semantic-field.schema.json",
+  "title": "SemanticField",
+  "description": "The wire contract this renderer draws. Published separately from the TypeScript types so a producer in another language can validate what it sends without reading TypeScript. The runtime validator shipped with the package enforces the same rules, and a build check requires the two to agree on every fixture.",
+  "type": "object",
+  "required": ["nodes", "links"],
+  "additionalProperties": true,
+  "properties": {
+    "nodes": {
+      "type": "object",
+      "description": "Keyed by node id. The key and the node's own id must match.",
+      "additionalProperties": { "$ref": "#/$defs/FieldNode" }
+    },
+    "links": {
+      "type": "object",
+      "description": "Keyed by link id. Both endpoints must name nodes present above.",
+      "additionalProperties": { "$ref": "#/$defs/FieldLink" }
+    },
+    "projection": { "type": "string" },
+    "updated_at": { "type": "number" }
+  },
+  "$defs": {
+    "scalar": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Normalized to [0,1]. Absent means not asserted, which is not the same as 0."
+    },
+    "FieldNode": {
+      "type": "object",
+      "required": ["id", "label", "kind"],
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string" },
+        "kind": {
+          "type": "string",
+          "description": "Open string. The renderer attaches no meaning to it; a host maps it to a shape."
+        },
+        "role": { "type": "string" },
+        "group": { "type": "string" },
+        "rank": { "type": "number" },
+        "state": {
+          "type": "string",
+          "enum": ["idle", "running", "paused", "completed", "failed", "pending_human", "refused", "unknown"],
+          "description": "refused is a first-class outcome, not an error."
+        },
+        "metric": {
+          "type": "object",
+          "required": ["value"],
+          "additionalProperties": true,
+          "properties": {
+            "value": {
+              "oneOf": [{ "$ref": "#/$defs/scalar" }, { "type": "null" }],
+              "description": "null means not asserted and renders neutral, never at the minimum."
+            },
+            "formatted": { "type": "string" },
+            "color": { "type": "string" }
+          }
+        },
+        "descriptor": { "type": "object" },
+        "domain_extensions": { "type": "object" }
+      }
+    },
+    "FieldLink": {
+      "type": "object",
+      "required": ["id", "source", "target"],
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "source": { "type": "string", "minLength": 1 },
+        "target": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string" },
+        "envelope": { "$ref": "#/$defs/SemanticLinkEnvelope" },
+        "domain_extensions": { "type": "object" }
+      }
+    },
+    "SemanticLinkEnvelope": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "relation_type": { "type": "string" },
+        "confidence": { "$ref": "#/$defs/scalar" },
+        "policy_compat": { "$ref": "#/$defs/scalar" },
+        "trust": { "$ref": "#/$defs/scalar" },
+        "readiness": { "$ref": "#/$defs/scalar" },
+        "relearning_pressure": { "$ref": "#/$defs/scalar" },
+        "provenance": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "source": { "type": "string" },
+            "derived_from": { "type": "array", "items": { "type": "string" } },
+            "recorded_at": { "type": "string" },
+            "verified": {
+              "type": "boolean",
+              "description": "Whether the chain was verified, not whether it exists."
+            }
+          }
+        },
+        "governance": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "inherited_from": { "type": "string" },
+            "policies": { "type": "array", "items": { "type": "string" } },
+            "enforced": { "type": "boolean" }
+          }
+        },
+        "domain_extensions": { "type": "object" }
+      }
+    }
+  }
+}

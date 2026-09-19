@@ -1,5 +1,6 @@
 export * from './types'
 export { filterField, type FilterResult } from './filterField'
+export { validateField, type FieldValidation, type FieldProblem } from './validateField'
 export * from './encoding'
 export * from './shapes'
 export { curvedUnitPolygonPath, type ShapeProps } from './shapes/Shape'

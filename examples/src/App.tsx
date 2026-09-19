@@ -84,11 +84,15 @@ export default function App() {
             <p className="eyebrow">Apache-2.0 · React · SVG</p>
             <ThemeToggle />
           </div>
-          <h1>graph-canvas</h1>
+          <h1>Semantic Field Canvas</h1>
+          <p className="tagline">A domain-neutral renderer for observable, policy-aware systems.</p>
           <p className="lede">
-            A graph renderer that does not know what it is drawing. It renders nodes, links, a
-            metric, a state and a decision trace — and has no branch that tests any of them for a
-            particular value. That is what lets one renderer back consumers which share no domain.
+            It renders nodes, links, a metric, a state and a decision trace, and has no branch that
+            tests any of them for a particular value — the build fails if domain vocabulary appears
+            anywhere in the source. Links carry an evidence envelope rather than being mere
+            connections, projections reinterpret one field along different dimensions instead of
+            producing different graphs, an unasserted value stays distinct from zero, and refusal is
+            a state rather than an error.
           </p>
           <pre className="install"><code>npm install @agent-scope-ca/graph-canvas</code></pre>
           <p className="links">
@@ -226,10 +230,9 @@ export default function App() {
           </ul>
 
           <p className="note">
-            One caveat this page would be dishonest to hide: <code>TraceLanes</code> is styled with
-            Tailwind utility classes and ships no stylesheet, so a host without Tailwind gets
-            unstyled text. This site loads Tailwind for that reason. <code>FieldCanvas</code> above
-            needs no CSS at all — give it a height and it renders.
+            The components need no CSS framework. FieldCanvas is SVG and needs no CSS at all; the
+            trace view below carries one small stylesheet you import once. Color in both comes from
+            CSS custom properties, which is how this page themes them light and dark.
           </p>
 
           <div className="canvas trace">

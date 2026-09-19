@@ -1,7 +1,13 @@
-# `@agent-scope-ca/graph-canvas`
+# Semantic Field Canvas
 
-The Semantic Field canvas, extracted from the Agent Scope topology view so
-that the same renderer can back more than one consumer.
+`@agent-scope-ca/graph-canvas` — a domain-neutral renderer for observable,
+policy-aware systems.
+
+It draws nodes, links, a metric, a state and a decision trace, and has no branch
+that tests any of them for a particular value. Links carry an evidence envelope
+rather than being mere connections; projections reinterpret one field along
+different dimensions rather than producing different graphs; an unasserted value
+stays distinct from zero; and refusal is a state, not an error.
 
 Three things live here:
 
@@ -41,17 +47,92 @@ copy of each rather than two.
 The build is ESM with type declarations. `src/` ships in the tarball as well, so
 a stack trace lands somewhere readable.
 
-### Styling, which differs by component
+### Styling
+
+No CSS framework, and nothing to configure.
 
 `FieldCanvas` and the shape stack need **no CSS at all** — they are SVG with
-inline attributes, and colors arrive as props. Give the element a height and it
-renders.
+inline attributes. Give the element a height and it renders.
 
-`TraceLanes` is the exception and it is worth knowing before you import it: it is
-styled with **Tailwind utility classes** and ships no stylesheet. Without Tailwind
-in the host — and with a `content` glob that reaches this package's source, or
-the classes are purged — it renders as unstyled text. That is a rough edge, not a
-design: the canvas is dependency-free and the trace view should be too.
+`TraceLanes` is a layout of boxes, so it carries one small stylesheet:
+
+```js
+import '@agent-scope-ca/graph-canvas/styles.css'
+```
+
+Color in both comes from `--gc-*` custom properties with light fallbacks, so a
+host themes them — including a dark theme — without overriding the stylesheet:
+
+```css
+:root[data-theme='dark'] {
+  --gc-fg: #f2efec;
+  --gc-fg-muted: #a39a93;
+  --gc-line: #332c28;
+  --gc-surface: #1c1917;
+  --gc-negative-line: #6b2233; --gc-negative-bg: #251318; --gc-negative-fg: #fda4af;
+}
+```
+
+### Shapes are the host's vocabulary
+
+`defaultShapeResolver` knows no vocabulary: it hashes `kind` so distinct kinds
+get distinct, stable shapes. It used to carry an infrastructure vocabulary
+(`pod`, `container`, `service`, `host`) and a set of platform roles. Both were
+overridable and neither misbehaved, but a package claiming not to know what it is
+drawing cannot ship a list of the things it knows. Bring your own:
+
+```ts
+const resolver: ShapeResolver = (node) =>
+  node.kind === 'pod' ? 'hexagon' : node.kind === 'host' ? 'cylinder' : 'circle'
+```
+
+### Validate at the boundary
+
+TypeScript checks the code that builds a field in your repository. It checks
+nothing about a payload that arrived over HTTP from a service written in another
+language, which is where malformed fields come from.
+
+```ts
+import { validateField } from '@agent-scope-ca/graph-canvas'
+
+const result = validateField(await res.json())
+if (!result.valid) {
+  console.error(result.problems) // [{ path: 'links.l3.target', message: 'names "ghost", which is not a node in this field' }]
+  return
+}
+render(result.field)
+```
+
+Problems name the path in the producer's own payload. The validator catches what
+a schema cannot express — a link endpoint naming a node that is not in the
+field, or a map key disagreeing with the id inside it.
+
+`schema/semantic-field.schema.json` states the same contract for producers in
+other languages, and `npm run check` requires the validator and the schema to
+agree on every fixture, so they cannot drift apart silently.
+
+`FieldCanvas` does **not** validate its props. Validation belongs at the
+boundary, once, where the untrusted data arrives — not on every render.
+
+### Operating range
+
+Measured with `npm run bench` on one machine, so read the shape rather than the
+absolute numbers. The force simulation dominates; the deterministic helpers
+(projection context, scalars, collision radii, fit) are negligible beside it.
+
+| nodes | links | helpers | force layout, 300 ticks |
+|------:|------:|--------:|------------------------:|
+| 100   | 160   | 0.5 ms  | 79 ms                   |
+| 500   | 800   | 1.1 ms  | 515 ms                  |
+| 1,000 | 1,600 | 1.1 ms  | 1,168 ms                |
+| 5,000 | 8,000 | 7.4 ms  | 8,493 ms                |
+
+So: comfortable to a few hundred nodes, usable at a thousand with a visible
+settle, and at five thousand the layout takes seconds. **This is not a renderer
+for 50,000-node graphs, and it is not trying to be.** Every node is an
+inspectable SVG element, which is the point for a view meant to carry evidence,
+and it is also the reason the ceiling is where it is. Above a few thousand nodes,
+aggregate before rendering.
 
 ## Usage
 

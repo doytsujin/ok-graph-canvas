@@ -1,6 +1,6 @@
 {
   "name": "@agent-scope-ca/graph-canvas",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Semantic Field canvas: weaveworks-derived SVG shape stack, Semantic Link envelope rendering, and a projection registry for laying out the same node set along different control-plane dimensions.",
   "license": "Apache-2.0",
   "author": {
@@ -32,11 +32,15 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./styles.css": "./styles.css",
+    "./schema/semantic-field.schema.json": "./schema/semantic-field.schema.json"
   },
   "files": [
     "dist",
     "src",
+    "schema",
+    "styles.css",
     "LICENSE",
     "NOTICE",
     "README.md"
@@ -47,11 +51,13 @@
   },
   "scripts": {
     "build": "vite build --config vite.lib.config.ts && tsc -p tsconfig.build.json",
-    "check": "npm run check:canvas && npm run check:filter && npm run check:trace",
+    "check": "npm run check:canvas && npm run check:filter && npm run check:trace && npm run check:schema",
     "check:canvas": "esbuild check.ts --bundle --platform=node --format=cjs --outfile=.canvas-check.cjs --log-level=warning && node .canvas-check.cjs",
     "check:filter": "esbuild check-filter.ts --bundle --platform=node --format=cjs --outfile=.filter-check.cjs --log-level=warning && node .filter-check.cjs",
     "check:trace": "esbuild check-trace.ts --bundle --platform=node --format=esm --outfile=.trace-check.mjs --log-level=warning && node .trace-check.mjs",
-    "prepublishOnly": "npm run build && npm run check"
+    "prepublishOnly": "npm run build && npm run check",
+    "check:schema": "esbuild check-schema.ts --bundle --platform=node --format=cjs --outfile=.schema-check.cjs --log-level=warning && node .schema-check.cjs",
+    "bench": "esbuild bench.ts --bundle --platform=node --format=cjs --outfile=.bench.cjs --log-level=warning && node .bench.cjs"
   },
   "peerDependencies": {
     "@react-spring/web": ">=9",
@@ -71,6 +77,7 @@
     "@types/lodash-es": "^4.17.12",
     "@types/react": "^18.2.43",
     "@vitejs/plugin-react": "^4.2.1",
+    "ajv": "^8.20.0",
     "d3-force": "^3.0.0",
     "d3-selection": "^3.0.0",
     "d3-shape": "^3.2.0",

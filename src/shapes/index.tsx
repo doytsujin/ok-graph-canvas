@@ -1,4 +1,4 @@
-import type { AgentcellRole, FieldNode } from '../types'
+import type { FieldNode } from '../types'
 import type { ShapeProps } from './Shape'
 import { ShapeOctagon } from './ShapeOctagon'
 import { ShapeHexagon } from './ShapeHexagon'
@@ -39,63 +39,47 @@ export type ShapeKind =
 /** Picks the shape for a node. Supply your own to bring a different vocabulary. */
 export type ShapeResolver = (node: FieldNode) => ShapeKind
 
-/**
- * Infrastructure vocabulary → shape. Mirrors Scope's conventions so a
- * k8s-shaped field still reads the way Scope users expect.
- */
-export function shapeForKind(kind: string): ShapeKind {
-  switch (kind) {
-    case 'pod':
-    case 'container':
-      return 'hexagon'
-    case 'process':
-      return 'square'
-    case 'service':
-      return 'heptagon'
-    case 'host':
-      return 'cylinder'
-    case 'controller':
-      return 'sheet'
-    case 'external':
-      return 'cloud'
-    case 'bundle':
-      return 'octagon'
-    default:
-      return 'circle'
-  }
-}
+export const SHAPE_KINDS: ShapeKind[] = [
+  'circle',
+  'hexagon',
+  'square',
+  'heptagon',
+  'cylinder',
+  'sheet',
+  'octagon',
+  'triangle',
+  'pentagon',
+  'cloud',
+]
 
 /**
- * Agentcell vocabulary → shape (STATEMENT §5). Deliberately parallel to
- * `shapeForKind` rather than merged into it: the same canvas has to render
- * both an infrastructure topology and a Semantic Control Field, and collapsing
- * the two vocabularies into one switch is how the k8s shape of things leaks
- * into the semantic view.
+ * The default resolver knows no vocabulary, and that is the point.
+ *
+ * It used to carry two: an infrastructure one mapping pod/container/service/
+ * host, and a platform one mapping seven agent roles. Both were overridable, so
+ * neither ever misbehaved -- but a package whose headline claim is that it does
+ * not know what it is drawing cannot ship a switch statement listing the things
+ * it knows. Overridable is not the same as absent, and the claim is checkable by
+ * opening this file. Those vocabularies are a host concern now; the README shows
+ * the four lines that reproduce either.
+ *
+ * What replaces them still has to be useful, because a resolver that returns one
+ * shape for everything makes every node identical. So the shape is chosen by
+ * hashing the kind string: distinct kinds get distinct shapes, the same kind
+ * always gets the same shape across renders and reloads, and the package still
+ * has no idea what any of them mean.
  */
-export function shapeForAgentcellRole(role: AgentcellRole): ShapeKind {
-  switch (role) {
-    case 'dataset':
-      return 'cylinder'
-    case 'index':
-      return 'sheet'
-    case 'semantic-processor':
-      return 'hexagon'
-    case 'workflow-controller':
-      return 'octagon'
-    case 'policy-authority':
-      return 'pentagon'
-    case 'telemetry-producer':
-      return 'triangle'
-    case 'reasoning':
-      return 'heptagon'
-    default:
-      return 'circle'
+export const defaultShapeResolver: ShapeResolver = (node) => {
+  const key = node.role ?? node.kind ?? ''
+  if (!key) return 'circle'
+  // FNV-1a, for a stable spread that does not depend on string length alone.
+  let h = 0x811c9dc5
+  for (let i = 0; i < key.length; i++) {
+    h ^= key.charCodeAt(i)
+    h = Math.imul(h, 0x01000193) >>> 0
   }
+  return SHAPE_KINDS[h % SHAPE_KINDS.length]
 }
-
-/** Role wins when present, otherwise fall back to the kind vocabulary. */
-export const defaultShapeResolver: ShapeResolver = (node) =>
-  node.role ? shapeForAgentcellRole(node.role) : shapeForKind(node.kind)
 
 export function NodeShape(props: ShapeProps & { kind: ShapeKind }) {
   const { kind, ...rest } = props

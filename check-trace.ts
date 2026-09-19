@@ -382,7 +382,31 @@ eq(
 // output, which is how a first attempt at this check read the wrong file.
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
-const forbidden = ['quantum', 'qubit', 'calibration', 'admission.', 'backend-evidence', 'shots']
+// Two lists, because they failed for different reasons.
+//
+// The first is a consumer's profile vocabulary, which is what this sweep was
+// built for. The second is vocabulary that lived in this package's own source
+// and that this sweep did not catch: a default shape resolver switching on
+// pod/container/service/host, and a closed union of seven platform roles. Both
+// were overridable, so neither ever misbehaved -- and both falsified the claim
+// the package leads with, which an outside reviewer restated back as a
+// compliment the code did not deserve. Overridable is not absent.
+const forbidden = [
+  'quantum',
+  'qubit',
+  'calibration',
+  'admission.',
+  'backend-evidence',
+  'shots',
+  "'pod'",
+  "'container'",
+  "'namespace'",
+  "'cluster'",
+  "'semantic-processor'",
+  "'workflow-controller'",
+  "'policy-authority'",
+  "'telemetry-producer'",
+]
 
 // Every source file in the package, not a list someone has to remember to
 // extend. This package is vocabulary-free by construction, and that rule is

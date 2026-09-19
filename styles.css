@@ -1,0 +1,94 @@
+/*
+ * Styles for TraceLanes.
+ *
+ * FieldCanvas and the shape stack need nothing from this file — they are SVG
+ * with inline attributes. TraceLanes is a layout of boxes, and a box layout
+ * needs CSS somewhere.
+ *
+ * It used to be Tailwind utility classes, which meant the package silently
+ * required a host framework and rendered as unstyled text without one. One
+ * stylesheet is not a framework: import it once and the component works.
+ *
+ *     import '@agent-scope-ca/graph-canvas/styles.css'
+ *
+ * Color is NOT here. It comes from --gc-* custom properties with light
+ * fallbacks, set by the host, so theming does not require editing or overriding
+ * this file. What is here is only geometry.
+ */
+
+.gc-trace { display: flex; flex-direction: column; min-height: 0; }
+
+.gc-trace-header {
+  display: flex; align-items: center; flex-wrap: wrap; gap: .75rem;
+  padding: .5rem .75rem; border-bottom: 1px solid;
+}
+.gc-trace-title { font-size: .875rem; font-weight: 500; }
+.gc-trace-order { display: flex; align-items: center; gap: .25rem; font-size: 11px; }
+.gc-trace-order select {
+  font: inherit; font-size: 11px; padding: .125rem .25rem;
+  border: 1px solid; border-radius: .25rem;
+}
+.gc-trace-note { font-size: 11px; }
+.gc-trace-source { font-size: 11px; margin-left: auto; }
+
+.gc-trace-gaps {
+  margin: .75rem .75rem 0; padding: .5rem;
+  border: 1px solid; border-radius: .25rem; font-size: 12px;
+}
+.gc-strong { font-weight: 500; }
+.gc-gap { margin-top: .375rem; }
+.gc-gap-subject { font-size: 11px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.gc-gap-table { margin-top: .125rem; font-size: 11px; border-collapse: collapse; }
+.gc-gap-table td { padding-right: .75rem; }
+
+.gc-trace-body { flex: 1; overflow: auto; min-height: 0; padding: .75rem; }
+.gc-lanes { min-width: max-content; }
+.gc-lane { display: flex; align-items: stretch; border-bottom: 1px solid; }
+.gc-lane:last-child { border-bottom: 0; }
+.gc-lane-label { width: 10rem; flex-shrink: 0; padding: .5rem .75rem .5rem 0; }
+.gc-lane-name { font-size: 12px; font-weight: 500; }
+.gc-lane-desc { font-size: 10px; line-height: 1.25; }
+.gc-lane-empty { font-size: 10px; font-style: italic; margin-top: .25rem; }
+
+.gc-lane-grid { flex: 1; display: grid; gap: .5rem; padding: .5rem 0; }
+
+.gc-record {
+  text-align: left; border: 1px solid; border-radius: .25rem;
+  padding: .25rem .5rem; cursor: pointer; font: inherit;
+}
+.gc-record-kind {
+  font-size: 11px; font-weight: 500;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.gc-record-subject {
+  font-size: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  opacity: .7; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.gc-record-state { font-size: 10px; margin-top: .125rem; }
+.gc-record-meta { font-size: 10px; opacity: .6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gc-record-cause { font-size: 10px; opacity: .7; margin-top: .125rem; }
+/* Both of these are <button> elements, so they need the chrome removed
+   explicitly. Tailwind's preflight used to do it; without a reset in the host,
+   a browser draws them as grey boxes with a border, which is what happened the
+   first time this stylesheet replaced the utility classes. */
+.gc-link,
+.gc-record {
+  appearance: none;
+  -webkit-appearance: none;
+  font: inherit;
+  margin: 0;
+}
+.gc-link {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.gc-trace-footer {
+  display: flex; flex-wrap: wrap; gap: 1rem;
+  padding: .375rem .75rem; border-top: 1px solid; font-size: 10px;
+}

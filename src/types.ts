@@ -8,25 +8,15 @@
  * silently-undefined props.
  */
 
-/** Agentcell roles — STATEMENT §5. */
-export type AgentcellRole =
-  | 'dataset'
-  | 'index'
-  | 'semantic-processor'
-  | 'workflow-controller'
-  | 'policy-authority'
-  | 'telemetry-producer'
-  | 'reasoning'
-
-export const AGENTCELL_ROLES: AgentcellRole[] = [
-  'dataset',
-  'index',
-  'semantic-processor',
-  'workflow-controller',
-  'policy-authority',
-  'telemetry-producer',
-  'reasoning',
-]
+/**
+ * What a node is, in the host's terms.
+ *
+ * Deliberately an open string rather than a union. This was a closed set of
+ * seven platform roles, which meant the package shipped a list of the things it
+ * was willing to render -- the exact shape of knowing what you are drawing. A
+ * host names its own roles and maps them to shapes with a `ShapeResolver`.
+ */
+export type AgentcellRole = string
 
 /**
  * Execution state of a field node.
