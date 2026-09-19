@@ -1,0 +1,70 @@
+# Publishes to npm with trusted publishing: GitHub mints a short-lived OIDC
+# token for this workflow, npm verifies it against the trusted publisher
+# configured for the package, and no long-lived secret exists anywhere. npm also
+# attaches a provenance attestation automatically -- no --provenance flag, and
+# nothing to keep in sync.
+#
+# THE FIRST PUBLISH CANNOT USE THIS. npm has no equivalent of PyPI's pending
+# publishers: the trusted-publisher setting lives on the package's settings page,
+# and that page does not exist until the package does. So v0.1.0 goes out once
+# with a write-capable token, the trusted publisher is configured against this
+# file, and every release after that runs here with no token at all. See
+# RELEASING.md.
+#
+# Versions are not incidental. Trusted publishing needs npm >= 11.5.1 and Node
+# >= 22.14.0, and `actions/setup-node` with `node-version: 22` still ships an
+# npm 10.x that will fail with a confusing auth error rather than a version one.
+# The explicit upgrade below is what makes this work.
+name: publish
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.14.0'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Upgrade npm to a version that speaks OIDC
+        run: npm install -g npm@latest
+
+      - name: Report the toolchain
+        run: |
+          echo "node $(node -v)"
+          echo "npm  $(npm -v)  (trusted publishing needs >= 11.5.1)"
+
+      - run: npm ci
+
+      - name: Vocabulary and contract checks
+        run: npm run check
+
+      - name: Build
+        run: npm run build
+
+      # A tag that disagrees with package.json publishes a version nobody asked
+      # for, under a name that says otherwise. Cheaper to stop here.
+      - name: Tag must match the version in package.json
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p 'require("./package.json").version')"
+          if [ "$tag" != "$pkg" ]; then
+            echo "refusing: tag v$tag does not match package.json $pkg"
+            exit 1
+          fi
+          echo "tag v$tag matches package.json"
+
+      - name: Publish
+        run: npm publish
