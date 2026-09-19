@@ -64,6 +64,20 @@ export type FieldCanvasProps = {
   /** Render the "Fit" affordance that re-engages auto-fit after a manual zoom. */
   showFitControl?: boolean
   /**
+   * Detail for the selected node, shown as a popup anchored to that node while
+   * the canvas is expanded.
+   *
+   * Expanding covers the page, which takes the host's own inspector with it --
+   * usually a panel under the canvas, now somewhere off-screen. Selection still
+   * works and nothing shows the result, so this is the same content brought
+   * inside the viewport rather than a second way to say it.
+   *
+   * The host renders it, as with `renderActions`: the canvas positions a
+   * surface and knows nothing about what goes in it. Not rendered when the
+   * canvas is in the page, where the host's own inspector is visible.
+   */
+  renderExpandedDetail?: (node: FieldNode) => ReactNode
+  /**
    * Render the "Maximize" affordance, which lifts the canvas out of its box and
    * over the whole viewport until dismissed.
    *
@@ -86,6 +100,13 @@ const ZOOM_EXTENT: [number, number] = [0.2, 4]
  * modal should still be able to sit above it.
  */
 const EXPANDED_Z_INDEX = 9999
+
+/** Width of the detail popup, in screen px. */
+const DETAIL_WIDTH = 280
+/** Gap between the selected node's edge and the detail popup, in screen px. */
+const DETAIL_GAP = 14
+/** Keep-out margin from the viewport edge for the detail popup, in screen px. */
+const DETAIL_INSET = 12
 
 /**
  * Shared chrome for the canvas controls. Same contract as TraceLanes: variables
@@ -133,6 +154,7 @@ export function FieldCanvas(props: FieldCanvasProps) {
     renderActions,
     renderApproval,
     pulsingIds,
+    renderExpandedDetail,
     autoFit = true,
     showFitControl = true,
     showMaximizeControl = false,
@@ -291,6 +313,69 @@ export function FieldCanvas(props: FieldCanvasProps) {
     setExpanded((v) => !v)
   }, [])
 
+  // The popup is measured rather than assumed: its height depends entirely on
+  // what the host put in it, and both the flip and the vertical clamp need a
+  // real size to be correct rather than approximately correct.
+  const detailRef = useRef<HTMLDivElement | null>(null)
+  const [detailSize, setDetailSize] = useState({ w: 0, h: 0 })
+  useEffect(() => {
+    const el = detailRef.current
+    if (!el) return
+    const ro = new ResizeObserver(() => setDetailSize({ w: el.offsetWidth, h: el.offsetHeight }))
+    ro.observe(el)
+    setDetailSize({ w: el.offsetWidth, h: el.offsetHeight })
+    return () => ro.disconnect()
+  }, [expanded, selectedId])
+
+  /**
+   * Where the detail popup sits, in screen px.
+   *
+   * A node's screen position is the same composition the SVG group applies:
+   * `translate(t.x + w/2, t.y + h/2) scale(t.k)` over its layout coordinate. So
+   * the popup follows a pan or a zoom without anything having to tell it to --
+   * it is derived from the transform, not stored.
+   *
+   * Right of the node by default, flipped left when it would cross the right
+   * edge, and pinned inside the viewport when neither side fits, which is what
+   * happens to a node selected at high zoom. Vertically centred on the node and
+   * clamped the same way.
+   */
+  const detailPlacement = useMemo(() => {
+    if (!expanded || !selectedId || !renderExpandedDetail) return null
+    const n = layout.nodes[selectedId]
+    // A selected node can leave the field entirely -- a filter narrowing under a
+    // selection is the ordinary case -- and then there is nothing to anchor to.
+    if (!n) return null
+
+    const sx = transform.x + size.w / 2 + transform.k * n.x
+    const sy = transform.y + size.h / 2 + transform.k * n.y
+    const r = NODE_BASE_SIZE * transform.k
+
+    let left = sx + r + DETAIL_GAP
+    if (left + detailSize.w + DETAIL_INSET > size.w) {
+      const flipped = sx - r - DETAIL_GAP - detailSize.w
+      left =
+        flipped >= DETAIL_INSET
+          ? flipped
+          : Math.max(DETAIL_INSET, size.w - detailSize.w - DETAIL_INSET)
+    }
+    const top = Math.min(
+      Math.max(DETAIL_INSET, sy - detailSize.h / 2),
+      Math.max(DETAIL_INSET, size.h - detailSize.h - DETAIL_INSET),
+    )
+    return { left, top, node: n as FieldNode }
+  }, [
+    expanded,
+    selectedId,
+    renderExpandedDetail,
+    layout,
+    transform,
+    size.w,
+    size.h,
+    detailSize.w,
+    detailSize.h,
+  ])
+
   const adjacency = useMemo(() => {
     const map = new Map<string, Set<string>>()
     if (!field) return map
@@ -394,6 +479,98 @@ export function FieldCanvas(props: FieldCanvasProps) {
               {expanded ? 'Exit' : 'Maximize'}
             </button>
           )}
+        </div>
+      )}
+      {detailPlacement && renderExpandedDetail && (
+        <div
+          ref={detailRef}
+          // Without this the click reaches the root, which clears the selection
+          // -- so reading the popup would close it.
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            position: 'absolute',
+            left: detailPlacement.left,
+            top: detailPlacement.top,
+            zIndex: 2,
+            width: DETAIL_WIDTH,
+            borderRadius: 10,
+            border: '1px solid var(--gc-line, #cbd5e1)',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.16)',
+            color: 'var(--gc-fg, #0f172a)',
+            overflow: 'hidden',
+            // Hidden for the one frame before it has been measured. Its own size
+            // decides where it goes, so drawing it unmeasured would put it in
+            // the wrong place and then move it.
+            visibility: detailSize.h > 0 ? 'visible' : 'hidden',
+          }}
+        >
+          {/*
+            The translucency is a separate element rather than a background with
+            an alpha, because the obvious ways to write one are both worse here:
+            `opacity` on the card would fade the host's text along with the
+            surface, and `color-mix()` on a single background has no fallback in
+            an inline style -- where it is not supported the whole declaration is
+            dropped and the card draws with no background at all, over a graph.
+            A veil behind the content is understood everywhere, and the blur
+            simply does not apply where `backdrop-filter` is missing.
+          */}
+          <div
+            aria-hidden
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'var(--gc-surface, #ffffff)',
+              // Enough veil to read against a bright, high-contrast field --
+              // below about 0.85 the labels behind it compete with the text in
+              // front, and the blur cannot be relied on to make up the
+              // difference because `backdrop-filter` is the first thing a
+              // browser drops.
+              opacity: 0.9,
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              pointerEvents: 'none',
+            }}
+          />
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              onSelect?.(null)
+            }}
+            title="Clear the selection"
+            aria-label="Clear the selection"
+            style={{
+              position: 'absolute',
+              right: 6,
+              top: 6,
+              zIndex: 1,
+              width: 20,
+              height: 20,
+              lineHeight: '18px',
+              padding: 0,
+              fontSize: 13,
+              borderRadius: 5,
+              border: '1px solid var(--gc-line, #cbd5e1)',
+              background: 'var(--gc-surface, rgba(255,255,255,0.9))',
+              color: 'var(--gc-fg-muted, #475569)',
+            }}
+          >
+            ×
+          </button>
+          <div
+            style={{
+              position: 'relative',
+              padding: '10px 12px',
+              paddingRight: 30,
+              // Capped against the viewport rather than a fixed number: a host
+              // that renders a long descriptor should scroll inside the popup,
+              // not run off the bottom of the screen.
+              maxHeight: Math.max(120, size.h - DETAIL_INSET * 2),
+              overflowY: 'auto',
+            }}
+          >
+            {renderExpandedDetail(detailPlacement.node)}
+          </div>
         </div>
       )}
       <svg ref={svgRef} width={size.w} height={size.h} style={{ display: 'block' }}>

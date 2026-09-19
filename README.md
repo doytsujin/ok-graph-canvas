@@ -178,6 +178,34 @@ should not acquire that ability through an upgrade. Two things a host owns:
 - **Stacking.** The expanded canvas sits at `z-index: 9999`, which clears a
   sticky header and stays below a host modal that asks for more.
 
+### Detail while expanded
+
+Expanding covers the page, and it takes the host's inspector with it — typically
+a panel under the canvas, now somewhere off-screen. Selection still works and
+nothing shows the result, which is the one thing maximizing breaks.
+
+`renderExpandedDetail={(node) => …}` closes that: the canvas anchors a popup to
+the selected node, and the host renders what goes in it. Same arrangement as
+`renderActions` — the canvas positions a translucent surface and knows nothing
+about its contents, so the package stays free of any vocabulary. It renders only
+while expanded, because in the page the host's own inspector is visible and two
+of them would be one too many.
+
+```tsx
+<FieldCanvas
+  showMaximizeControl
+  renderExpandedDetail={(node) => <NodeDetail node={node} />}
+/>
+```
+
+The popup sits beside the node and follows it through a pan or a zoom — its
+position is derived from the zoom transform rather than stored — flipping to the
+other side when it would cross the viewport edge and pinning itself inside when
+neither side fits. Clicking the background clears the selection and closes it,
+as does its own close button; clicking inside it does not. Give the same
+component to the panel and to this, or the two drift and a reader who maximized
+the canvas is quietly told less.
+
 ## Built-in projections
 
 The eight named in the host platform statement, §9.5:

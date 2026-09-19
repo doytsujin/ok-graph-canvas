@@ -65,6 +65,38 @@ function ThemeToggle() {
 }
 const ORDERINGS: TraceOrdering[] = ['timestamp', 'observed_at', 'revision']
 
+/**
+ * What a selected node says about itself.
+ *
+ * One definition, two places: the panel under the canvas, and the popup the
+ * canvas anchors to the node once it is expanded and that panel has gone
+ * off-screen with the rest of the page. Written once because two of these would
+ * drift, and a reader who maximized the canvas would quietly be told less.
+ */
+function NodeDetail({ node }: { node: FieldNode }) {
+  return (
+    <div className="node-detail">
+      <h3>{node.label}</h3>
+      <dl>
+        <div><dt>kind</dt><dd>{node.kind}</dd></div>
+        <div><dt>group</dt><dd>{node.group ?? '—'}</dd></div>
+        <div><dt>state</dt><dd>{node.state ?? '—'}</dd></div>
+        <div>
+          <dt>metric</dt>
+          <dd>
+            {node.metric?.value == null
+              ? 'not asserted'
+              : (node.metric.formatted ?? node.metric.value.toFixed(2))}
+          </dd>
+        </div>
+      </dl>
+      {node.descriptor ? (
+        <pre><code>{JSON.stringify(node.descriptor, null, 2)}</code></pre>
+      ) : null}
+    </div>
+  )
+}
+
 export default function App() {
   const [projection, setProjection] = useState('similarity')
   const [query, setQuery] = useState('')
@@ -164,32 +196,19 @@ export default function App() {
               className="field"
               showFitControl
               showMaximizeControl
+              renderExpandedDetail={(node) => <NodeDetail node={node} />}
             />
           </div>
 
           <div className="inspector">
             {selected ? (
-              <>
-                <h3>{selected.label}</h3>
-                <dl>
-                  <div><dt>kind</dt><dd>{selected.kind}</dd></div>
-                  <div><dt>group</dt><dd>{selected.group ?? '—'}</dd></div>
-                  <div><dt>state</dt><dd>{selected.state ?? '—'}</dd></div>
-                  <div>
-                    <dt>metric</dt>
-                    <dd>
-                      {selected.metric?.value == null
-                        ? 'not asserted'
-                        : (selected.metric.formatted ?? selected.metric.value.toFixed(2))}
-                    </dd>
-                  </div>
-                </dl>
-                {selected.descriptor ? (
-                  <pre><code>{JSON.stringify(selected.descriptor, null, 2)}</code></pre>
-                ) : null}
-              </>
+              <NodeDetail node={selected} />
             ) : (
-              <p className="muted">Select a node. Selection hands over an identity, never a payload.</p>
+              <p className="muted">
+                Select a node. Selection hands over an identity, never a payload. Maximize the
+                canvas and the same detail follows the node as a popup, because this panel does
+                not.
+              </p>
             )}
           </div>
         </section>

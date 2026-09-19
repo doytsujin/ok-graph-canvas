@@ -153,14 +153,23 @@ code {
   margin-top: 1rem; padding: 1rem;
   background: var(--panel); border: 1px solid var(--line); border-radius: .6rem;
 }
-.inspector dl { margin: 0; display: grid; gap: .35rem .9rem; grid-template-columns: 1fr; }
-.inspector dl > div { display: flex; gap: .6rem; font-size: .9rem; }
-.inspector dt { color: var(--muted); min-width: 5rem; font-weight: 600; }
-.inspector dd { margin: 0; }
-.inspector pre {
+/* The node detail is styled by its own class, not by where it sits: it renders
+   both inside .inspector and inside the popup the canvas anchors to a node when
+   it is expanded, and that popup is not a descendant of .inspector. The trace
+   panel below keeps its own .inspector rules. */
+.inspector dl, .node-detail dl { margin: 0; display: grid; gap: .35rem .9rem; grid-template-columns: 1fr; }
+.inspector dl > div, .node-detail dl > div { display: flex; gap: .6rem; font-size: .9rem; }
+.inspector dt, .node-detail dt { color: var(--muted); min-width: 5rem; font-weight: 600; }
+.inspector dd, .node-detail dd { margin: 0; }
+.inspector pre, .node-detail pre {
   margin: .8rem 0 0; padding: .7rem; overflow-x: auto; font-size: .82rem;
   background: var(--bg); border: 1px solid var(--line); border-radius: .4rem;
 }
+/* Inside the popup the type has to work against a translucent surface at a
+   smaller measure, and the label column would otherwise eat half the width. */
+.node-detail h3 { font-size: .95rem; }
+.node-detail dt { min-width: 3.6rem; }
+.node-detail pre { max-height: 14rem; overflow: auto; }
 .muted { color: var(--muted); margin: 0; font-size: .92rem; }
 
 .rules { max-width: 72ch; padding-left: 1.1rem; }
