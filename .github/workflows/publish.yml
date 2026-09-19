@@ -11,10 +11,14 @@
 # file, and every release after that runs here with no token at all. See
 # RELEASING.md.
 #
-# Versions are not incidental. Trusted publishing needs npm >= 11.5.1 and Node
-# >= 22.14.0, and `actions/setup-node` with `node-version: 22` still ships an
-# npm 10.x that will fail with a confusing auth error rather than a version one.
-# The explicit upgrade below is what makes this work.
+# Versions are not incidental, and there are two floors, not one. Trusted
+# publishing needs npm >= 11.5.1 and Node >= 22.14.0, and `actions/setup-node`
+# ships an npm 10.x that fails with a confusing auth error rather than a version
+# one -- hence the explicit upgrade below. But `npm@latest` moves, and the npm
+# it installs carries its own engines floor: npm 12 refuses Node 22.14.0 and
+# wants ^22.22.2 || ^24.15.0 || >=26. Pinning Node to the OIDC minimum therefore
+# broke the release the day npm 12 shipped. `node-version: '22'` takes the
+# newest 22.x the runner has, which clears both floors and keeps clearing them.
 name: publish
 
 on:
@@ -34,7 +38,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '22.14.0'
+          node-version: '22'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Upgrade npm to a version that speaks OIDC
