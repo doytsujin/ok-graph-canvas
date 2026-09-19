@@ -1,0 +1,6 @@
+dist/
+*.tgz
+node_modules/
+.canvas-check.cjs
+.filter-check.cjs
+.trace-check.mjs

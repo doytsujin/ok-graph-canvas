@@ -1,0 +1,198 @@
+import { animated, useSpring } from '@react-spring/web'
+import { useEffect, useState, type ReactNode } from 'react'
+import type { FieldNode } from './types'
+import { encodeState } from './encoding'
+import { NodeShape, defaultShapeResolver, type ShapeResolver } from './shapes'
+
+/**
+ * Half-extent of a node in layout units at scale 1. Exported because
+ * fit-to-extent has to pad the node bounding box by it — fitting to bare
+ * centre positions clips every node on the boundary in half.
+ */
+export const NODE_BASE_SIZE = 56 // px radius at scale 1
+
+/**
+ * Scale applied to the caption `<text>` inside the node group.
+ *
+ * Named rather than left as a literal because the camera has to predict how
+ * wide a caption will be in order to frame it, and a magic number in two files
+ * is a number that drifts in one of them. `fitToExtent` takes the width it
+ * derives from this as an option; see the call in `FieldCanvas`.
+ */
+export const CAPTION_SCALE = 0.018
+
+/** Nominal font size of the caption, in px, before `CAPTION_SCALE`. */
+export const CAPTION_FONT_PX = 16
+
+export type GraphNodeProps = {
+  node: FieldNode
+  x: number
+  y: number
+  highlighted?: boolean
+  selected?: boolean
+  pulsing?: boolean
+  hovered?: boolean
+  dimmed?: boolean
+  /** Primary stroke colour — supplied by the host's theming, not looked up here. */
+  color?: string
+  captionColor?: string
+  /**
+   * Node-name colour. Defaults to the near-black the light canvas was drawn
+   * for; a dark host must override it or the name renders invisible against
+   * its own background.
+   */
+  labelColor?: string
+  shapeResolver?: ShapeResolver
+  showCaption?: boolean
+  onClick?: (id: string) => void
+  onHover?: (id: string | null) => void
+  /** Hover affordances. Rendered inside a pre-scaled SVG group. */
+  renderActions?: (node: FieldNode) => ReactNode
+  /** Shown when `node.state === 'pending_human'`, in the same pre-scaled group. */
+  renderApproval?: (node: FieldNode) => ReactNode
+}
+
+/**
+ * One field node: shape + state badge + caption + (on hover) action
+ * affordances.
+ *
+ * Position and scale are spring-animated so that a projection switch glides
+ * rather than cutting — which is the whole reason node identity is preserved
+ * across projections upstream in `useFieldLayout`.
+ */
+export function GraphNode(props: GraphNodeProps) {
+  const {
+    node,
+    x,
+    y,
+    highlighted = false,
+    selected = false,
+    pulsing = false,
+    hovered = false,
+    dimmed = false,
+    color = '#7c3aed',
+    captionColor = '#475569',
+    labelColor = '#0f172a',
+    shapeResolver = defaultShapeResolver,
+    showCaption = true,
+    onClick,
+    onHover,
+    renderActions,
+    renderApproval,
+  } = props
+
+  const [localHover, setLocalHover] = useState(false)
+  const isHover = hovered || localHover
+
+  // Snapshot-spring transitions (Scope feel) — damping ~18, stiffness ~100.
+  const styles = useSpring({
+    x,
+    y,
+    scale: selected ? 1.15 : isHover ? 1.06 : 1,
+    config: { tension: 100, friction: 18, precision: 0.1 },
+  })
+
+  const [pulse, setPulse] = useState(0)
+  useEffect(() => {
+    if (!pulsing) return
+    setPulse(1)
+    const t = window.setTimeout(() => setPulse(0), 1100)
+    return () => window.clearTimeout(t)
+  }, [pulsing])
+
+  const state = encodeState(node.state)
+  const awaitingApproval = node.state === 'pending_human'
+
+  return (
+    <animated.g
+      transform={styles.x.to(
+        (vx) =>
+          `translate(${vx}, ${styles.y.get()}) scale(${
+            styles.scale.get() * NODE_BASE_SIZE
+          })`,
+      )}
+      style={{ cursor: 'pointer', opacity: dimmed ? 0.28 : 1 }}
+      onMouseEnter={() => {
+        setLocalHover(true)
+        onHover?.(node.id)
+      }}
+      onMouseLeave={() => {
+        setLocalHover(false)
+        onHover?.(null)
+      }}
+      onClick={(e) => {
+        e.stopPropagation()
+        onClick?.(node.id)
+      }}
+    >
+      {pulse > 0 && (
+        <circle r={1.2} fill="none" stroke={color} strokeWidth={0.08} opacity={0.55} />
+      )}
+
+      <NodeShape
+        kind={shapeResolver(node)}
+        id={node.id}
+        color={color}
+        highlighted={selected || highlighted}
+        metricNumericValue={node.metric?.value ?? null}
+        metricColor={node.metric?.color}
+        metricFormattedValue={node.metric?.formatted}
+      />
+
+      {/* execution-state badge — top-right of the unit shape */}
+      {state && (
+        <g transform="translate(0.72, -0.72)">
+          {state.animated && (
+            <circle r={0.28} fill={state.color} opacity={0.25}>
+              <animate
+                attributeName="r"
+                values="0.22;0.36;0.22"
+                dur="1.6s"
+                repeatCount="indefinite"
+              />
+            </circle>
+          )}
+          <circle r={0.17} fill={state.color} stroke="#fff" strokeWidth={0.05} />
+          <title>{state.label}</title>
+        </g>
+      )}
+
+      {showCaption && (
+        <g transform="translate(0, 1.25)">
+          <text
+            textAnchor="middle"
+            dominantBaseline="hanging"
+            transform={`scale(${CAPTION_SCALE})`}
+            fill={labelColor}
+            style={{ fontWeight: 600, pointerEvents: 'none' }}
+          >
+            {node.label}
+          </text>
+          {node.group && (
+            <text
+              textAnchor="middle"
+              dominantBaseline="hanging"
+              transform="translate(0, 0.32) scale(0.013)"
+              fill={captionColor}
+              style={{ pointerEvents: 'none' }}
+            >
+              {node.group}
+            </text>
+          )}
+        </g>
+      )}
+
+      {/*
+        Approval outranks the hover affordances: a node waiting on a human is
+        the one thing that must stay actionable without hovering it first.
+      */}
+      {awaitingApproval && renderApproval && (
+        <g transform="translate(0, -1.35) scale(0.018)">{renderApproval(node)}</g>
+      )}
+
+      {isHover && !awaitingApproval && renderActions && (
+        <g transform="translate(0, -1.35) scale(0.018)">{renderActions(node)}</g>
+      )}
+    </animated.g>
+  )
+}

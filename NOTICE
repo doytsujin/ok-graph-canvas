@@ -1,0 +1,34 @@
+@agent-scope/graph-canvas
+Copyright 2026 Alexander Chernov
+
+This product includes software developed at Weaveworks Ltd.
+
+    Copyright 2016-2018 Weaveworks Ltd.
+    https://github.com/weaveworks/ui-components
+    Licensed under the Apache License, Version 2.0.
+
+The shape stack is ported from weaveworks-ui-components/GraphNode and has been
+modified. Specifically:
+
+    src/shapes/Shape.tsx
+        curvedUnitPolygonPath, ported from GraphNode/shapes/_Shape.js
+
+    src/shapes/BaseShape.tsx
+        the layered highlight -> background -> metric -> shadow -> border ->
+        anchor composition, ported from GraphNode/shapes/_BaseShape.js and
+        simplified
+
+    src/shapes/Shape{Circle,Cloud,Cylinder,Heptagon,Hexagon,Octagon,Pentagon,
+                     Sheet,Square,Triangle}.tsx
+        the shape set follows the upstream set and composes the two files above
+
+These files differ from their originals: they are TypeScript rather than
+JavaScript, they render through a props contract this package defines rather
+than upstream's, and the compositing layers were reduced.
+
+The rest of the package is original work and is not derived from
+weaveworks-ui-components:
+
+    the Semantic Link envelope and its encoding into stroke, dash, hue and
+    opacity; the projection registry and layout; the filter; the decision
+    trace; the canvas host and its fit-to-extent behaviour; the type surface.
