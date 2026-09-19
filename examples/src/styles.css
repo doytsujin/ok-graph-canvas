@@ -117,7 +117,12 @@ main { padding: 2.5rem 0 3rem; }
 section { margin-bottom: 3.25rem; }
 h2 { font-size: 1.4rem; margin: 0 0 .7rem; letter-spacing: -.01em; }
 h3 { font-size: 1rem; margin: 0 0 .6rem; }
-p { max-width: 72ch; }
+/* No measure cap on body text. Capping every paragraph at 72ch while `.wrap`
+   runs to 72rem ended each block of prose halfway across a page whose controls,
+   canvas, inspector and trace all ran the full width — so the text read as
+   left-aligned against centered components rather than as a narrower measure.
+   The purple header keeps its own shorter measures, which is where they belong:
+   it is a banner, not the body. */
 a { color: var(--accent); }
 code {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -172,7 +177,7 @@ code {
 .node-detail pre { max-height: 14rem; overflow: auto; }
 .muted { color: var(--muted); margin: 0; font-size: .92rem; }
 
-.rules { max-width: 72ch; padding-left: 1.1rem; }
+.rules { padding-left: 1.1rem; }
 .rules li { margin-bottom: .6rem; }
 
 .page-footer {
