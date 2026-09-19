@@ -31,4 +31,4 @@ weaveworks-ui-components:
 
     the Semantic Link envelope and its encoding into stroke, dash, hue and
     opacity; the projection registry and layout; the filter; the decision
-    trace; the canvas host and its fit-to-extent behaviour; the type surface.
+    trace; the canvas host and its fit-to-extent behavior; the type surface.

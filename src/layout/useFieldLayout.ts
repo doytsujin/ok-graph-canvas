@@ -166,7 +166,7 @@ export function useFieldLayout(
     // envelope scalars, so `scalars` is empty and *every* node is unranked —
     // and it made the canvas useless in exactly the case it has to work in.
     //
-    // d3-force's own default initialiser avoids this with a phyllotaxis spiral;
+    // d3-force's own default initializer avoids this with a phyllotaxis spiral;
     // that default is bypassed here because x/y are set explicitly. So the
     // spiral is reproduced for the unranked case. It is deterministic (index,
     // not random), so a re-render does not reshuffle the picture, and the

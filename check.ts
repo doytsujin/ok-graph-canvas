@@ -118,7 +118,7 @@ check('similarity ranks nothing', reg.get('similarity')!.scalar!(field.nodes.ds_
 const bare = encodeLink({ envelope: {} })
 const neutral = encodeLink({ envelope: undefined })
 check('empty envelope == no envelope', JSON.stringify(bare) === JSON.stringify(neutral), 'diverged')
-check('no-envelope link is neutral grey', neutral.stroke === '#94a3b8', neutral.stroke)
+check('no-envelope link is neutral gray', neutral.stroke === '#94a3b8', neutral.stroke)
 check('no-envelope link has no halo', neutral.halo === false, 'halo set')
 
 const enforced = encodeLink({ envelope: { governance: { enforced: true }, policy_compat: 1, trust: 1 } })
@@ -181,14 +181,14 @@ check('the y = -204 node is no longer above the viewport', offscreen.y >= 0, Str
 // package is vocabulary-free by construction and that includes its tests.
 const LABEL = 'a caption long enough to overhang its node'
 const LABEL_CHAR_WIDTH = 8.9
-const labelled = [
+const labeled = [
   { x: -600, y: 0, label: LABEL },
   { x: 600, y: 0, label: LABEL },
   { x: 0, y: 0, label: 'short' },
 ]
-const tl = fitToExtent(labelled, W, H, { ...FIT, labelCharWidth: LABEL_CHAR_WIDTH })!
+const tl = fitToExtent(labeled, W, H, { ...FIT, labelCharWidth: LABEL_CHAR_WIDTH })!
 const halfLabel = (LABEL.length * LABEL_CHAR_WIDTH) / 2
-for (const n of labelled) {
+for (const n of labeled) {
   const half = Math.max(56, ((n.label ?? '').length * LABEL_CHAR_WIDTH) / 2)
   const left = projectToScreen({ x: n.x - half, y: n.y }, tl, W, H)
   const right = projectToScreen({ x: n.x + half, y: n.y }, tl, W, H)
@@ -202,7 +202,7 @@ for (const n of labelled) {
 // And the regression stated the other way: ignoring labels must produce a
 // tighter fit than accounting for them, or the option is doing nothing.
 const tIgnored = fitToExtent(
-  labelled.map((n) => ({ x: n.x, y: n.y })),
+  labeled.map((n) => ({ x: n.x, y: n.y })),
   W, H, FIT,
 )!
 check(
@@ -246,7 +246,7 @@ check(
 // -- captions must not be written across the next node ------------------------
 //
 // The camera fix above stops a caption running off the viewport. It does
-// nothing about a caption running across its neighbour, which is a separate
+// nothing about a caption running across its neighbor, which is a separate
 // failure with a separate cause: the simulation separated nodes on a fixed
 // radius that was chosen to clear a typical caption and cannot clear a long one.
 const BASE = DEFAULT_COLLIDE_OPTIONS.base

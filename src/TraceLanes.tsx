@@ -285,7 +285,7 @@ export function TraceLanes({
                       {causes.length > 0 && (
                         <div className="gc-record-cause">
                           {/* Named, never inferred. An id we do not hold is
-                              labelled as outside the window rather than hidden,
+                              labeled as outside the window rather than hidden,
                               and is not offered as something to click. */}
                           after{' '}
                           {causes.map((c, i) => {

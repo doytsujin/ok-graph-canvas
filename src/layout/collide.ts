@@ -13,7 +13,7 @@
  * across the shape of the next. That was already known here — the collide force
  * carried a fixed radius of 105 chosen to clear a typical name — but a fixed
  * radius cannot clear an atypical one. A forty-character caption is about 182
- * units of half-width, well past 105, and it overlapped its neighbour.
+ * units of half-width, well past 105, and it overlapped its neighbor.
  *
  * So the radius is per node and derived from the caption it actually has.
  *

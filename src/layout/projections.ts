@@ -404,7 +404,7 @@ export const admissionDeviationProjection: ProjectionSpec = {
     return clamp01(sigma / ADMISSION_DEVIATION_FULL_SCALE)
   },
   // Every link participates: the deviation is a property of the node, and
-  // excluding links would strand a deviating subject away from the neighbours
+  // excluding links would strand a deviating subject away from the neighbors
   // that give it context.
   includeLink: () => true,
   linkWeight: () => 0.25,

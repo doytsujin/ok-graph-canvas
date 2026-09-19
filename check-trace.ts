@@ -278,7 +278,7 @@ eq('agreement produces no finding', laneDisagreements(records).length, 0)
 // about what is missing, never into an inferred relationship.
 
 // 1. A cause outside the window (covered above) must not become an edge, and
-//    must not become a *different* edge by silently attaching to a neighbour.
+//    must not become a *different* edge by silently attaching to a neighbor.
 const cut = records.filter((r) => r.id !== 'w1')
 check(
   'a windowed-out cause attaches to nothing else',

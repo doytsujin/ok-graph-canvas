@@ -69,7 +69,7 @@
 .gc-record-cause { font-size: 10px; opacity: .7; margin-top: .125rem; }
 /* Both of these are <button> elements, so they need the chrome removed
    explicitly. Tailwind's preflight used to do it; without a reset in the host,
-   a browser draws them as grey boxes with a border, which is what happened the
+   a browser draws them as gray boxes with a border, which is what happened the
    first time this stylesheet replaced the utility classes. */
 .gc-link,
 .gc-record {
