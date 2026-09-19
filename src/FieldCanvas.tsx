@@ -337,7 +337,7 @@ export function FieldCanvas(props: FieldCanvasProps) {
    *
    * Right of the node by default, flipped left when it would cross the right
    * edge, and pinned inside the viewport when neither side fits, which is what
-   * happens to a node selected at high zoom. Vertically centred on the node and
+   * happens to a node selected at high zoom. Vertically centered on the node and
    * clamped the same way.
    */
   const detailPlacement = useMemo(() => {
