@@ -1,4 +1,4 @@
-# `@agent-scope/graph-canvas`
+# `@agent-scope-ca/graph-canvas`
 
 The Semantic Field canvas, extracted from the Agent Scope topology view so
 that the same renderer can back more than one consumer.
@@ -30,7 +30,7 @@ without inheriting a Kubernetes vocabulary.
 ## Install
 
 ```
-npm install @agent-scope/graph-canvas
+npm install @agent-scope-ca/graph-canvas
 ```
 
 Peer dependencies, none of which this package bundles: `react` 18+,
@@ -61,7 +61,7 @@ import {
   ProjectionRegistry,
   builtinProjections,
   type SemanticField,
-} from '@agent-scope/graph-canvas'
+} from '@agent-scope-ca/graph-canvas'
 
 const registry = new ProjectionRegistry(builtinProjections)
 

@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 // Library build for the published package. The three in-repo consumers do NOT
-// use this: each aliases `@agent-scope/graph-canvas` straight at `src/index.ts`,
+// use this: each aliases `@agent-scope-ca/graph-canvas` straight at `src/index.ts`,
 // so they compile the source and this config only exists for `npm publish`.
 //
 // Bundled rather than transpiled file-by-file because the source uses

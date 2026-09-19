@@ -8,7 +8,7 @@ import {
   type FieldNode,
   type TraceOrdering,
   type TraceRecord,
-} from '@agent-scope/graph-canvas'
+} from '@agent-scope-ca/graph-canvas'
 import { colorForNode, harborField, harborShapeResolver, harborTrace } from './harbor'
 
 const registry = defaultRegistry()
@@ -36,7 +36,7 @@ export default function App() {
             metric, a state and a decision trace — and has no branch that tests any of them for a
             particular value. That is what lets one renderer back consumers which share no domain.
           </p>
-          <pre className="install"><code>npm install @agent-scope/graph-canvas</code></pre>
+          <pre className="install"><code>npm install @agent-scope-ca/graph-canvas</code></pre>
           <p className="links">
             <a href="https://github.com/doytsujin/ok-graph-canvas">Source</a>
             <a href="https://github.com/doytsujin/ok-graph-canvas/blob/main/README.md">README</a>

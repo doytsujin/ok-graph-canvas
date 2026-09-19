@@ -14,7 +14,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@agent-scope/graph-canvas': fileURLToPath(new URL('../src/index.ts', import.meta.url)),
+      '@agent-scope-ca/graph-canvas': fileURLToPath(new URL('../src/index.ts', import.meta.url)),
     },
   },
   build: { outDir: 'dist', emptyOutDir: true },

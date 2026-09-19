@@ -18,7 +18,7 @@ import type {
   FieldNode,
   SemanticField,
   ShapeKind,
-} from '@agent-scope/graph-canvas'
+} from '@agent-scope-ca/graph-canvas'
 
 const node = (n: FieldNode): [string, FieldNode] => [n.id, n]
 const link = (l: FieldLink): [string, FieldLink] => [l.id, l]
