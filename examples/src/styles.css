@@ -86,7 +86,11 @@ body {
   font: 16px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
-.wrap { width: min(72rem, 100% - 2rem); margin-inline: auto; }
+/* 56rem, not 72rem. With the measure cap gone (see the note by `a` below) the
+   page's width IS the line length, so the container has to be a width prose can
+   be read at rather than the widest the canvas could use. Everything narrows
+   together, which is the point: text and components agree at one edge. */
+.wrap { width: min(56rem, 100% - 2rem); margin-inline: auto; }
 
 /* Scoped to the page's own header. A bare `header` selector also matches the
    one TraceLanes renders inside the canvas, which is how this page's accent
