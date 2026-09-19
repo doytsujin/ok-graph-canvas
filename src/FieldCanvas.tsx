@@ -251,9 +251,12 @@ export function FieldCanvas(props: FieldCanvasProps) {
             fontSize: 11,
             padding: '2px 8px',
             borderRadius: 6,
-            border: '1px solid #cbd5e1',
-            background: 'rgba(255,255,255,0.9)',
-            color: '#475569',
+            // Same contract as TraceLanes: variables with light fallbacks, so a
+            // host with a dark palette gets a control that belongs to it, and a
+            // host that sets nothing still gets a legible light one.
+            border: '1px solid var(--gc-line, #cbd5e1)',
+            background: 'var(--gc-surface, rgba(255,255,255,0.9))',
+            color: 'var(--gc-fg-muted, #475569)',
           }}
         >
           Fit

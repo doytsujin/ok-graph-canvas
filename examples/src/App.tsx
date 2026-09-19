@@ -12,6 +12,57 @@ import {
 import { colorForNode, harborField, harborShapeResolver, harborTrace } from './harbor'
 
 const registry = defaultRegistry()
+
+type Choice = 'light' | 'dark' | 'system'
+
+function readChoice(): Choice {
+  try {
+    const t = localStorage.getItem('theme')
+    return t === 'light' || t === 'dark' ? t : 'system'
+  } catch {
+    return 'system'
+  }
+}
+
+/**
+ * Three states, not a switch. A two-state toggle cannot express "follow the
+ * system", so picking it once would pin the page to whatever the OS said at
+ * that moment -- and a reader who later switches their machine to dark would
+ * find this page still light with no way to say why.
+ */
+function ThemeToggle() {
+  const [choice, setChoice] = useState<Choice>(readChoice)
+
+  const apply = (next: Choice) => {
+    setChoice(next)
+    const root = document.documentElement
+    if (next === 'system') delete root.dataset.theme
+    else root.dataset.theme = next
+    try {
+      if (next === 'system') localStorage.removeItem('theme')
+      else localStorage.setItem('theme', next)
+    } catch {
+      // A private window or blocked storage still gets the theme it asked for
+      // for this visit; only the memory of it is lost.
+    }
+  }
+
+  return (
+    <div className="theme" role="group" aria-label="Colour scheme">
+      {(['light', 'dark', 'system'] as Choice[]).map((c) => (
+        <button
+          key={c}
+          type="button"
+          aria-pressed={choice === c}
+          className={choice === c ? 'on' : undefined}
+          onClick={() => apply(c)}
+        >
+          {c[0].toUpperCase() + c.slice(1)}
+        </button>
+      ))}
+    </div>
+  )
+}
 const ORDERINGS: TraceOrdering[] = ['timestamp', 'observed_at', 'revision']
 
 export default function App() {
@@ -27,9 +78,12 @@ export default function App() {
 
   return (
     <>
-      <header>
+      <header className="page-header">
         <div className="wrap">
-          <p className="eyebrow">Apache-2.0 · React · SVG</p>
+          <div className="topbar">
+            <p className="eyebrow">Apache-2.0 · React · SVG</p>
+            <ThemeToggle />
+          </div>
           <h1>graph-canvas</h1>
           <p className="lede">
             A graph renderer that does not know what it is drawing. It renders nodes, links, a
@@ -223,7 +277,7 @@ export default function App() {
         </section>
       </main>
 
-      <footer>
+      <footer className="page-footer">
         <div className="wrap">
           <h2 className="footer-h">Who made this</h2>
           <p>

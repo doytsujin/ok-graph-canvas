@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, type CSSProperties } from 'react'
 import {
   affectedBy,
   causalEdges,
@@ -48,12 +48,49 @@ export interface TraceLanesProps {
   className?: string
 }
 
-const TONE_CLASS: Record<string, string> = {
-  positive: 'border-emerald-300 bg-emerald-50 text-emerald-900',
-  negative: 'border-rose-300 bg-rose-50 text-rose-900',
-  warning: 'border-amber-300 bg-amber-50 text-amber-900',
-  neutral: 'border-slate-300 bg-slate-50 text-slate-700',
+/**
+ * Colour comes from CSS custom properties with light-mode fallbacks, not from
+ * utility classes. Two reasons, and the second is the one that bites.
+ *
+ * A host that sets the variables gets this component in its own palette,
+ * including a dark one, with no Tailwind `dark:` variant and no configuration.
+ * A host that sets nothing still gets a readable light component, because every
+ * variable carries a fallback.
+ *
+ * The layout classes below are still Tailwind. Those are theme-independent, so
+ * they do not have this problem -- but the component does still need Tailwind
+ * for layout, which is a separate rough edge and is documented as one.
+ */
+const TONE_STYLE: Record<string, CSSProperties> = {
+  positive: {
+    borderColor: 'var(--gc-positive-line, #6ee7b7)',
+    background: 'var(--gc-positive-bg, #ecfdf5)',
+    color: 'var(--gc-positive-fg, #064e3b)',
+  },
+  negative: {
+    borderColor: 'var(--gc-negative-line, #fda4af)',
+    background: 'var(--gc-negative-bg, #fff1f2)',
+    color: 'var(--gc-negative-fg, #881337)',
+  },
+  warning: {
+    borderColor: 'var(--gc-warning-line, #fcd34d)',
+    background: 'var(--gc-warning-bg, #fffbeb)',
+    color: 'var(--gc-warning-fg, #78350f)',
+  },
+  neutral: {
+    borderColor: 'var(--gc-neutral-line, #cbd5e1)',
+    background: 'var(--gc-neutral-bg, #f8fafc)',
+    color: 'var(--gc-neutral-fg, #334155)',
+  },
 }
+
+const FG = 'var(--gc-fg, #1e293b)'
+const MUTED = 'var(--gc-fg-muted, #64748b)'
+const FAINT = 'var(--gc-fg-faint, #94a3b8)'
+const LINE = 'var(--gc-line, #e2e8f0)'
+const LINE_SOFT = 'var(--gc-line-soft, #f1f5f9)'
+const SURFACE = 'var(--gc-surface, #ffffff)'
+const WARN = 'var(--gc-warn, #b45309)'
 
 const DEFAULT_ORDERINGS: TraceOrdering[] = ['timestamp', 'observed_at', 'revision', 'sequence']
 
@@ -108,15 +145,21 @@ export function TraceLanes({
 
   return (
     <div className={`flex flex-col min-h-0 ${className}`}>
-      <header className="px-3 py-2 border-b border-slate-200 flex items-center gap-3 flex-wrap">
-        <div className="text-sm font-medium text-slate-800">Decision trace</div>
-        <label className="text-[11px] text-slate-500 flex items-center gap-1">
+      <header
+        className="px-3 py-2 border-b flex items-center gap-3 flex-wrap"
+        style={{ borderColor: LINE }}
+      >
+        <div className="text-sm font-medium" style={{ color: FG }}>
+          Decision trace
+        </div>
+        <label className="text-[11px] flex items-center gap-1" style={{ color: MUTED }}>
           ordered by
           <select
             value={order}
             onChange={(e) => onOrderChange?.(e.target.value as TraceOrdering)}
             disabled={!onOrderChange}
-            className="text-[11px] border border-slate-200 rounded px-1 py-0.5 bg-white"
+            className="text-[11px] border rounded px-1 py-0.5"
+            style={{ borderColor: LINE, background: SURFACE, color: FG }}
           >
             {orderings.map((o) => (
               <option key={o} value={o}>
@@ -126,17 +169,22 @@ export function TraceLanes({
           </select>
         </label>
         {trace.meta?.truncated && (
-          <span className="text-[11px] text-amber-700">
+          <span className="text-[11px]" style={{ color: WARN }}>
             truncated — older records are not shown
           </span>
         )}
         {trace.meta?.source && (
-          <span className="text-[11px] text-slate-400 ml-auto">{trace.meta.source}</span>
+          <span className="text-[11px] ml-auto" style={{ color: FAINT }}>
+            {trace.meta.source}
+          </span>
         )}
       </header>
 
       {gaps.length > 0 && (
-        <div className="mx-3 mt-3 p-2 rounded border border-rose-300 bg-rose-50 text-[12px] text-rose-900">
+        <div
+          className="mx-3 mt-3 p-2 rounded border text-[12px]"
+          style={TONE_STYLE.negative}
+        >
           <div className="font-medium">
             {gaps.length === 1 ? 'One subject is' : `${gaps.length} subjects are`} described
             differently by different lanes
@@ -167,18 +215,26 @@ export function TraceLanes({
       <div className="flex-1 overflow-auto min-h-0 p-3">
         <div className="min-w-max">
           {rows.map(({ lane, records }) => (
-            <div key={lane.id} className="flex items-stretch border-b border-slate-100 last:border-b-0">
+            <div
+              key={lane.id}
+              className="flex items-stretch border-b last:border-b-0"
+              style={{ borderColor: LINE_SOFT }}
+            >
               <div className="w-40 flex-shrink-0 py-2 pr-3">
-                <div className="text-[12px] font-medium text-slate-700">{lane.label}</div>
+                <div className="text-[12px] font-medium" style={{ color: FG }}>
+                  {lane.label}
+                </div>
                 {lane.description && (
-                  <div className="text-[10px] text-slate-400 leading-tight">
+                  <div className="text-[10px] leading-tight" style={{ color: FAINT }}>
                     {lane.description}
                   </div>
                 )}
                 {records.length === 0 && (
                   // A lane nobody produced is not an empty lane, and saying so
                   // costs one line.
-                  <div className="text-[10px] text-slate-400 italic mt-1">nothing recorded</div>
+                  <div className="text-[10px] italic mt-1" style={{ color: FAINT }}>
+                    nothing recorded
+                  </div>
                 )}
               </div>
               <div
@@ -203,10 +259,14 @@ export function TraceLanes({
                           onSelect?.(r)
                         }
                       }}
-                      style={{ gridColumn: column + 1 }}
-                      className={`text-left rounded border px-2 py-1 cursor-pointer ${
-                        TONE_CLASS[r.tone ?? 'neutral'] ?? TONE_CLASS.neutral
-                      } ${selectedId === r.id ? 'ring-2 ring-slate-400' : ''}`}
+                      style={{
+                        gridColumn: column + 1,
+                        ...(TONE_STYLE[r.tone ?? 'neutral'] ?? TONE_STYLE.neutral),
+                        ...(selectedId === r.id
+                          ? { outline: `2px solid ${FAINT}`, outlineOffset: '1px' }
+                          : {}),
+                      }}
+                      className="text-left rounded border px-2 py-1 cursor-pointer"
                     >
                       <div className="text-[11px] font-medium truncate">{r.label ?? r.kind}</div>
                       {r.subject && (
@@ -268,16 +328,19 @@ export function TraceLanes({
         </div>
       </div>
 
-      <footer className="px-3 py-1.5 border-t border-slate-200 text-[10px] text-slate-500 flex gap-4 flex-wrap">
+      <footer
+        className="px-3 py-1.5 border-t text-[10px] flex gap-4 flex-wrap"
+        style={{ borderColor: LINE, color: MUTED }}
+      >
         <span>{trace.records.length} records</span>
         <span>{edges.length} declared causal links</span>
         {dangling.length > 0 && (
-          <span className="text-amber-700">
+          <span style={{ color: WARN }}>
             {dangling.length} cause{dangling.length === 1 ? '' : 's'} outside this window
           </span>
         )}
         {missing.length > 0 && (
-          <span className="text-slate-500">
+          <span style={{ color: MUTED }}>
             {missing.length} record{missing.length === 1 ? '' : 's'} carry no{' '}
             {ORDER_LABEL[order]}
           </span>

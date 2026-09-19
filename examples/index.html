@@ -8,6 +8,16 @@
       name="description"
       content="A vocabulary-free SVG graph renderer for React: nodes, links, a metric, a state and a decision trace."
     />
+    <script>
+      // Applied before first paint, or the page flashes light and then corrects
+      // itself. "System" is the ABSENCE of a stored value, never the word
+      // "system": someone who picks it and later changes their OS setting
+      // should follow the OS, and storing a resolved value freezes them.
+      try {
+        var t = localStorage.getItem('theme')
+        if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>
