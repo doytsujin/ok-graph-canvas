@@ -39,8 +39,12 @@ export default function App() {
           <pre className="install"><code>npm install @agent-scope-ca/graph-canvas</code></pre>
           <p className="links">
             <a href="https://github.com/doytsujin/ok-graph-canvas">Source</a>
+            <a href="https://www.npmjs.com/package/@agent-scope-ca/graph-canvas">npm</a>
             <a href="https://github.com/doytsujin/ok-graph-canvas/blob/main/README.md">README</a>
             <a href="https://github.com/doytsujin/ok-graph-canvas/blob/main/NOTICE">Attribution</a>
+          </p>
+          <p className="byline">
+            Built by <a href="https://chernov.ca">Alexander Chernov</a>
           </p>
         </div>
       </header>
@@ -221,8 +225,20 @@ export default function App() {
 
       <footer>
         <div className="wrap">
+          <h2 className="footer-h">Who made this</h2>
           <p>
-            Apache-2.0. The shape stack is ported from{' '}
+            <strong>Alexander Chernov</strong> — a data and platform engineer working on the control
+            planes behind regulated science: the systems that decide what may be executed, and what a
+            computed result must carry before anyone may act on it. This renderer came out of that
+            work, which is why it insists on drawing only what a producer actually declared.
+          </p>
+          <p className="author-links">
+            <a href="https://chernov.ca">chernov.ca</a>
+            <a href="https://github.com/doytsujin">github.com/doytsujin</a>
+            <a href="https://orcid.org/0009-0007-3198-2712">ORCID 0009-0007-3198-2712</a>
+          </p>
+          <p>
+            &copy; 2026 Alexander Chernov. Apache-2.0. The shape stack is ported from{' '}
             <a href="https://github.com/weaveworks/ui-components">weaveworks-ui-components</a>, also
             Apache-2.0; <a href="https://github.com/doytsujin/ok-graph-canvas/blob/main/NOTICE">NOTICE</a>{' '}
             records which files are derived and how they were modified.

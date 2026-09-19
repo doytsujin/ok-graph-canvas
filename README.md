@@ -95,6 +95,12 @@ Each returns the same node set with a different anchor scheme and a different
 participating link set, which is the acceptance criterion the host platform
 sets for them.
 
+## Author
+
+Built by **Alexander Chernov** — [chernov.ca](https://chernov.ca) ·
+[github.com/doytsujin](https://github.com/doytsujin) ·
+[ORCID 0009-0007-3198-2712](https://orcid.org/0009-0007-3198-2712)
+
 ## Licence
 
 Apache-2.0. The shape stack is ported from
