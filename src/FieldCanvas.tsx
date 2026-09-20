@@ -101,6 +101,35 @@ const ZOOM_EXTENT: [number, number] = [0.2, 4]
  */
 const EXPANDED_Z_INDEX = 9999
 
+/**
+ * Where the detail popup sits, given a node, a camera and a viewport.
+ *
+ * Extracted as a pure function because two paths need it and they must agree:
+ * React when the popup first opens, and the zoom gesture, which moves it by
+ * writing to the DOM without rendering anything.
+ */
+function placeDetail(
+  n: { x: number; y: number },
+  t: { x: number; y: number; k: number },
+  size: { w: number; h: number },
+  card: { w: number; h: number },
+) {
+  const sx = t.x + size.w / 2 + t.k * n.x
+  const sy = t.y + size.h / 2 + t.k * n.y
+  const r = NODE_BASE_SIZE * t.k
+
+  let left = sx + r + DETAIL_GAP
+  if (left + card.w + DETAIL_INSET > size.w) {
+    const flipped = sx - r - DETAIL_GAP - card.w
+    left = flipped >= DETAIL_INSET ? flipped : Math.max(DETAIL_INSET, size.w - card.w - DETAIL_INSET)
+  }
+  const top = Math.min(
+    Math.max(DETAIL_INSET, sy - card.h / 2),
+    Math.max(DETAIL_INSET, size.h - card.h - DETAIL_INSET),
+  )
+  return { left, top }
+}
+
 /** Width of the detail popup, in screen px. */
 const DETAIL_WIDTH = 280
 /** Gap between the selected node's edge and the detail popup, in screen px. */
@@ -164,7 +193,26 @@ export function FieldCanvas(props: FieldCanvasProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const svgRef = useRef<SVGSVGElement | null>(null)
   const [size, setSize] = useState({ w: 1200, h: 800 })
-  const [transform, setTransform] = useState<ZoomTransform>(zoomIdentity)
+  /**
+   * The camera does not go through React.
+   *
+   * A pan or a zoom changes where the field is seen from, not what is in it —
+   * yet routing every gesture frame through `setState` re-rendered the canvas
+   * and all of its children. On a field of a few hundred nodes that is
+   * thousands of SVG elements reconciled per mouse move, and it is felt as the
+   * picture lagging the pointer and, under load, as a selection that never
+   * draws at all. Firefox shows it far worse than Chrome, which is itself the
+   * evidence that the cost is in rendering rather than in any arithmetic.
+   *
+   * The transform lives in a ref; the gesture writes the one attribute that
+   * changed onto the scene group and nudges the popup. Render reads the ref,
+   * so a re-render for some other reason still paints the current camera.
+   */
+  const transformRef = useRef<ZoomTransform>(zoomIdentity)
+  const sceneRef = useRef<SVGGElement | null>(null)
+  const cardRef = useRef<HTMLDivElement | null>(null)
+  const sizeRef = useRef(size)
+  sizeRef.current = size
   const [hoverId, setHoverId] = useState<string | null>(null)
   const [expanded, setExpanded] = useState(false)
 
@@ -191,7 +239,8 @@ export function FieldCanvas(props: FieldCanvasProps) {
         // `sourceEvent` is null for programmatic transforms, which is how a
         // fit is told apart from a user gesture.
         if (event.sourceEvent) autoFitRef.current = false
-        setTransform(event.transform)
+        transformRef.current = event.transform
+        applyCameraRef.current()
       })
     zoomRef.current = z
     svg.call(z as any)
@@ -199,6 +248,24 @@ export function FieldCanvas(props: FieldCanvasProps) {
       svg.on('.zoom', null)
     }
   }, [])
+
+  const anchorRef = useRef<{ x: number; y: number } | null>(null)
+  const applyCameraRef = useRef<() => void>(() => {})
+  applyCameraRef.current = () => {
+    const t = transformRef.current
+    const sz = sizeRef.current
+    sceneRef.current?.setAttribute(
+      'transform',
+      `translate(${t.x + sz.w / 2}, ${t.y + sz.h / 2}) scale(${t.k})`,
+    )
+    const card = cardRef.current
+    const anchor = anchorRef.current
+    if (card && anchor) {
+      const p = placeDetail(anchor, t, sz, { w: card.offsetWidth, h: card.offsetHeight })
+      card.style.left = `${p.left}px`
+      card.style.top = `${p.top}px`
+    }
+  }
 
   const spec: ProjectionSpec = useMemo(
     () => registry.get(projection) ?? similarityProjection,
@@ -341,35 +408,25 @@ export function FieldCanvas(props: FieldCanvasProps) {
    * clamped the same way.
    */
   const detailPlacement = useMemo(() => {
-    if (!expanded || !selectedId || !renderExpandedDetail) return null
+    if (!expanded || !selectedId || !renderExpandedDetail) {
+      anchorRef.current = null
+      return null
+    }
     const n = layout.nodes[selectedId]
     // A selected node can leave the field entirely -- a filter narrowing under a
     // selection is the ordinary case -- and then there is nothing to anchor to.
-    if (!n) return null
-
-    const sx = transform.x + size.w / 2 + transform.k * n.x
-    const sy = transform.y + size.h / 2 + transform.k * n.y
-    const r = NODE_BASE_SIZE * transform.k
-
-    let left = sx + r + DETAIL_GAP
-    if (left + detailSize.w + DETAIL_INSET > size.w) {
-      const flipped = sx - r - DETAIL_GAP - detailSize.w
-      left =
-        flipped >= DETAIL_INSET
-          ? flipped
-          : Math.max(DETAIL_INSET, size.w - detailSize.w - DETAIL_INSET)
+    if (!n) {
+      anchorRef.current = null
+      return null
     }
-    const top = Math.min(
-      Math.max(DETAIL_INSET, sy - detailSize.h / 2),
-      Math.max(DETAIL_INSET, size.h - detailSize.h - DETAIL_INSET),
-    )
-    return { left, top, node: n as FieldNode }
+    anchorRef.current = { x: n.x, y: n.y }
+    const p = placeDetail(n, transformRef.current, { w: size.w, h: size.h }, detailSize)
+    return { ...p, node: n as FieldNode }
   }, [
     expanded,
     selectedId,
     renderExpandedDetail,
     layout,
-    transform,
     size.w,
     size.h,
     detailSize.w,
@@ -520,7 +577,10 @@ export function FieldCanvas(props: FieldCanvasProps) {
       )}
       {detailPlacement && renderExpandedDetail && (
         <div
-          ref={detailRef}
+          ref={(el) => {
+            detailRef.current = el
+            cardRef.current = el
+          }}
           // Without this the click reaches the root, which clears the selection
           // -- so reading the popup would close it.
           onClick={(e) => e.stopPropagation()}
@@ -612,9 +672,10 @@ export function FieldCanvas(props: FieldCanvasProps) {
       )}
       <svg ref={svgRef} width={size.w} height={size.h} style={{ display: 'block' }}>
         <g
-          transform={`translate(${transform.x + size.w / 2}, ${
-            transform.y + size.h / 2
-          }) scale(${transform.k})`}
+          ref={sceneRef}
+          transform={`translate(${transformRef.current.x + size.w / 2}, ${
+            transformRef.current.y + size.h / 2
+          }) scale(${transformRef.current.k})`}
         >
           {linkPaintOrder.map((e) => (
             <GraphEdge
