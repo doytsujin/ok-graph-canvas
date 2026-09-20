@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { animated, useSpring, type SpringValue } from '@react-spring/web'
 import type { SemanticLinkEnvelope } from './types'
 import { encodeLink } from './encoding'
@@ -61,7 +62,11 @@ const interpMid = (s: Springs) =>
  * stroke color became a function of `policy_compat`, a shared marker id would
  * have made every arrowhead adopt the color of whichever edge mounted first.
  */
-export function GraphEdge(props: GraphEdgeProps) {
+/**
+ * Memoised for the same reason as GraphNode: a field with a few hundred links
+ * re-drew every one of them on every hover.
+ */
+export const GraphEdge = memo(function GraphEdge(props: GraphEdgeProps) {
   const {
     id,
     x1,
@@ -162,4 +167,4 @@ export function GraphEdge(props: GraphEdgeProps) {
       )}
     </g>
   )
-}
+})

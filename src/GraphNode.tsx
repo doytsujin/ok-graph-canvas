@@ -1,5 +1,5 @@
 import { animated, useSpring } from '@react-spring/web'
-import { useEffect, useState, type ReactNode } from 'react'
+import { memo, useEffect, useState, type ReactNode } from 'react'
 import type { FieldNode } from './types'
 import { encodeState } from './encoding'
 import { NodeShape, defaultShapeResolver, type ShapeResolver } from './shapes'
@@ -89,7 +89,13 @@ const RECEDED_OPACITY = 0.32
 const SELECTED_SHADOW = 'drop-shadow(0 0.045px 0.05px rgba(15, 23, 42, 0.5))'
 const LINKED_SHADOW = 'drop-shadow(0 0.025px 0.035px rgba(15, 23, 42, 0.33))'
 
-export function GraphNode(props: GraphNodeProps) {
+/**
+ * Memoised, because a field of a few hundred nodes re-renders all of them on
+ * every hover and every selection otherwise. Only the handful whose
+ * `selected`, `highlighted` or `dimmed` actually changed need to redraw; the
+ * rest compare equal and are skipped.
+ */
+export const GraphNode = memo(function GraphNode(props: GraphNodeProps) {
   const {
     node,
     x,
@@ -246,4 +252,4 @@ export function GraphNode(props: GraphNodeProps) {
       )}
     </animated.g>
   )
-}
+})

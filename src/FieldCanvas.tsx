@@ -411,6 +411,19 @@ export function FieldCanvas(props: FieldCanvasProps) {
    * parents would unmount and remount it, and the spring carrying its position
    * would start over every time the selection changed.
    */
+  /**
+   * Stable handler identities.
+   *
+   * These were inline arrows, which meant every node and every link received a
+   * new function on every render and no amount of memoising the children could
+   * help: a selection re-rendered all 4,957 SVG elements of a 133-node field
+   * and took five seconds to paint. The children are memoised now, and that is
+   * only worth anything if their props actually compare equal.
+   */
+  const handleNodeClick = useCallback((id: string) => onSelect?.(id), [onSelect])
+  const handleNodeHover = useCallback((id: string | null) => setHoverId(id), [])
+  const handleLinkClick = useCallback((id: string) => onSelectLink?.(id), [onSelectLink])
+
   const paintOrder = useMemo(() => {
     const rank = (id: string) => (id === selectedId ? 2 : highlightSet.has(id) ? 1 : 0)
     return Object.values(layout.nodes).sort((a, b) => rank(a.id) - rank(b.id))
@@ -621,7 +634,7 @@ export function FieldCanvas(props: FieldCanvasProps) {
                 highlightSet.size > 0 &&
                 !(highlightSet.has(e.source) && highlightSet.has(e.target))
               }
-              onClick={onSelectLink ? (id) => onSelectLink(id) : undefined}
+              onClick={onSelectLink ? handleLinkClick : undefined}
             />
           ))}
 
@@ -642,8 +655,8 @@ export function FieldCanvas(props: FieldCanvasProps) {
               dimmed={highlightSet.size > 0 && !highlightSet.has(n.id)}
               hovered={hoverId === n.id}
               pulsing={pulsingIds?.has(n.id) ?? false}
-              onClick={(id) => onSelect?.(id)}
-              onHover={(id) => setHoverId(id)}
+              onClick={handleNodeClick}
+              onHover={handleNodeHover}
               renderActions={renderActions}
               renderApproval={renderApproval}
             />
