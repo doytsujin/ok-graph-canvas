@@ -1,0 +1,17 @@
+{
+  "name": "field-layout",
+  "type": "module",
+  "description": "The Semantic Field force simulation, compiled to WebAssembly.",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "files": [
+    "field_layout_bg.wasm",
+    "field_layout.js",
+    "field_layout.d.ts"
+  ],
+  "main": "field_layout.js",
+  "types": "field_layout.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

@@ -6,3 +6,7 @@ node_modules/
 .trace-check.mjs
 examples/dist/
 examples/node_modules/
+# Cargo puts target/ next to each crate, not at the workspace root, so the
+# pattern has to be a glob. `rust/target` matched nothing and 184 build
+# artifacts went into a commit.
+rust/**/target/

@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
   forceCenter,
   forceCollide,
@@ -16,6 +16,7 @@ import {
   type ProjectionSpec,
 } from './projections'
 import { collideRadius } from './collide'
+import { onWasmReady, wasmSim, WASM_MAX_NODES } from './wasmSim'
 
 export type LaidOutNode = FieldNode & {
   x: number
@@ -64,6 +65,10 @@ export function useFieldLayout(
 ): FieldLayout {
   const simRef = useRef<Simulation<any, any> | null>(null)
   const [tick, setTick] = useState(0)
+  // Bumped once, when the Rust lands, so a field already settled in
+  // JavaScript is settled again by the faster path rather than left as it is.
+  const [, wasmArrived] = useState(0)
+  useEffect(() => onWasmReady(() => wasmArrived((n) => n + 1)), [])
 
   const nodeMapRef = useRef<Map<string, LaidOutNode>>(new Map())
   const lastNodeIdsRef = useRef<string>('')
@@ -246,7 +251,63 @@ export function useFieldLayout(
       // forceSimulation starts its own timer on construction, so stop it before
       // stepping by hand or the two advance the same bodies at once.
       sim.stop()
-      sim.tick(settle)
+
+      const w = wasmSim()
+      if (w && nodeArr.length > 0 && nodeArr.length <= WASM_MAX_NODES) {
+        // One crossing of the boundary in, one out. Per-node calls would spend
+        // more on the edge than the simulation costs.
+        const n = nodeArr.length
+        const index = new Map(nodeArr.map((d, i) => [d.id, i]))
+        const sx = new Float64Array(n)
+        const sy = new Float64Array(n)
+        const rad = new Float64Array(n)
+        const chg = new Float64Array(n)
+        const ax = new Float64Array(n)
+        const axk = new Float64Array(n)
+        const ay = new Float64Array(n)
+        const ayk = new Float64Array(n)
+        nodeArr.forEach((d, i) => {
+          sx[i] = d.x
+          sy[i] = d.y
+          rad[i] = collideRadius(d)
+          chg[i] = -900
+          const sc = scalars.get(d.id)
+          ax[i] = sc == null ? spreadX(d.id) : axisX(sc)
+          axk[i] = sc == null ? 0.08 : 0.22
+          ay[i] = laneY(lanes.get(d.id) ?? 'default')
+          ayk[i] = 0.07
+        })
+        const ls = links.filter((l) => index.has(l.source) && index.has(l.target))
+        const lsrc = new Uint32Array(ls.length)
+        const ltgt = new Uint32Array(ls.length)
+        const ldist = new Float64Array(ls.length)
+        const lk = new Float64Array(ls.length)
+        ls.forEach((l, i) => {
+          lsrc[i] = index.get(l.source)!
+          ltgt[i] = index.get(l.target)!
+          ldist[i] = 200
+          lk[i] = 0.1 + 0.5 * weightOf(l.__link)
+        })
+
+        const s = new w.Simulation()
+        try {
+          s.set_nodes(sx, sy, rad, chg, ax, axk, ay, ayk)
+          s.set_links(lsrc, ltgt, ldist, lk)
+          s.tick(settle, 0.6, 0.04)
+          const ox = s.xs()
+          const oy = s.ys()
+          nodeArr.forEach((d, i) => {
+            d.x = ox[i]
+            d.y = oy[i]
+            d.vx = 0
+            d.vy = 0
+          })
+        } finally {
+          s.free()
+        }
+      } else {
+        sim.tick(settle)
+      }
       setTick((t) => (t + 1) % 1_000_000)
     } else {
       sim.on('tick', () => setTick((t) => (t + 1) % 1_000_000))
