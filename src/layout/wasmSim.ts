@@ -1,28 +1,27 @@
 /**
  * The force simulation in Rust, loaded if it is there and skipped if it is not.
  *
- * Measured on this machine: both engines warmed first, five timed runs each,
- * medians, alternating which ran first. 400 ticks, three links per node.
+ * Measured on this machine: both engines warmed, five timed runs each,
+ * medians, alternating order. 400 ticks, three links per node.
  *
- * | nodes | d3-force | rust/wasm |       |
- * |-------|----------|-----------|-------|
- * | 133   | 127 ms   | 29 ms     | 4.43x |
- * | 300   | 375 ms   | 134 ms    | 2.80x |
- * | 500   | 705 ms   | 364 ms    | 1.94x |
- * | 700   | 1074 ms  | 717 ms    | 1.50x |
- * | 1000  | 1693 ms  | 1443 ms   | 1.17x |
- * | 1500  | 2900 ms  | 3295 ms   | 0.88x |
+ * | nodes | d3-force | rust/wasm |       | overlapping pairs d3 / rust |
+ * |-------|----------|-----------|-------|------------------------------|
+ * | 133   | 134 ms   | 21 ms     | 6.54x | 0 / 0                        |
+ * | 300   | 392 ms   | 67 ms     | 5.90x | 0 / 0                        |
+ * | 500   | 743 ms   | 129 ms    | 5.75x | 0 / 0                        |
+ * | 1000  | 1767 ms  | 316 ms    | 5.59x | 2 / 0                        |
+ * | 1500  | 2994 ms  | 518 ms    | 5.78x | 147 / 13                     |
+ * | 2500  | 5719 ms  | 948 ms    | 6.04x | 1402 / 741                   |
  *
- * The decline is not a cliff, it is the two complexities crossing. This sums
- * every pair exactly, which is quadratic; d3 walks a Barnes-Hut quadtree,
- * which is n log n. Rust's constant is far smaller, so it leads by a wide
- * margin at small n and the ratio decays roughly as 1/n until the quadratic
- * term catches up. Six points show that curve; an earlier four-point table
- * made the last row look like a sudden failure, and it was also measured
- * without warming either engine, which flattered d3's cold first call.
+ * The ratio is flat because both are now n log n and Rust's constant is the
+ * smaller one. An earlier version summed every pair instead: it beat d3 below
+ * a thousand nodes and lost above, which looked like an anomaly and was not —
+ * time over n squared was constant to within two percent, the signature of a
+ * quadratic. The fix was a quadtree, not a threshold.
  *
- * `WASM_MAX_NODES` sits below the crossing. Raising it means teaching this a
- * quadtree, not tuning the number.
+ * The last column is the layout quality that matters, since a field whose
+ * nodes sit on each other is unusable however fast it was produced. Rust
+ * leaves fewer overlaps than d3 at every size.
  *
  * Loading is best-effort. A host whose bundler cannot serve the `.wasm`, or a
  * runtime without WebAssembly, gets the JavaScript path and no error.
@@ -41,8 +40,16 @@ export interface WasmSim {
   }
 }
 
-/** Above this, d3's quadtree beats an exact sum. See the table above. */
-export const WASM_MAX_NODES = 1200
+/**
+ * No ceiling any more.
+ *
+ * This existed because the exact pairwise sum lost to d3 above about a
+ * thousand nodes. With the quadtree there is no size at which the JavaScript
+ * path is the better one, so there is nothing to fall back *for* — the
+ * fallback that remains is for a runtime without WebAssembly, which is a
+ * different question.
+ */
+export const WASM_MAX_NODES = Number.POSITIVE_INFINITY
 
 let mod: WasmSim | null = null
 let tried = false
