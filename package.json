@@ -1,6 +1,6 @@
 {
   "name": "@agent-scope-ca/graph-canvas",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Semantic Field canvas: weaveworks-derived SVG shape stack, Semantic Link envelope rendering, and a projection registry for laying out the same node set along different control-plane dimensions.",
   "license": "Apache-2.0",
   "author": {
