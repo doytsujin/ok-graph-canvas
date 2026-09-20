@@ -1,6 +1,6 @@
 {
   "name": "@agent-scope-ca/graph-canvas",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Semantic Field canvas: weaveworks-derived SVG shape stack, Semantic Link envelope rendering, and a projection registry for laying out the same node set along different control-plane dimensions.",
   "license": "Apache-2.0",
   "author": {
@@ -34,11 +34,7 @@
       "import": "./dist/index.js"
     },
     "./styles.css": "./styles.css",
-    "./schema/semantic-field.schema.json": "./schema/semantic-field.schema.json",
-    "./gl": {
-      "types": "./dist/gl/index.d.ts",
-      "import": "./dist/gl/index.js"
-    }
+    "./schema/semantic-field.schema.json": "./schema/semantic-field.schema.json"
   },
   "files": [
     "dist",
@@ -71,9 +67,7 @@
     "d3-shape": "^3",
     "d3-zoom": "^3",
     "lodash-es": "^4",
-    "react": ">=18",
-    "sigma": ">=3",
-    "graphology": ">=0.25"
+    "react": ">=18"
   },
   "devDependencies": {
     "@react-spring/web": "^9.7.4",
@@ -94,13 +88,5 @@
     "react": "^18.3.1",
     "typescript": "^5.3.3",
     "vite": "^5.0.8"
-  },
-  "peerDependenciesMeta": {
-    "sigma": {
-      "optional": true
-    },
-    "graphology": {
-      "optional": true
-    }
   }
 }
