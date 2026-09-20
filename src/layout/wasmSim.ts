@@ -1,21 +1,28 @@
 /**
  * The force simulation in Rust, loaded if it is there and skipped if it is not.
  *
- * Measured on this machine, 400 ticks, three links per node:
+ * Measured on this machine: both engines warmed first, five timed runs each,
+ * medians, alternating which ran first. 400 ticks, three links per node.
  *
- * | nodes | d3-force | rust/wasm |        |
- * |-------|----------|-----------|--------|
- * | 133   | 161 ms   | 45 ms     | 3.6x   |
- * | 300   | 418 ms   | 208 ms    | 2.0x   |
- * | 500   | 746 ms   | 574 ms    | 1.3x   |
- * | 1000  | 1687 ms  | 2222 ms   | 0.8x   |
+ * | nodes | d3-force | rust/wasm |       |
+ * |-------|----------|-----------|-------|
+ * | 133   | 127 ms   | 29 ms     | 4.43x |
+ * | 300   | 375 ms   | 134 ms    | 2.80x |
+ * | 500   | 705 ms   | 364 ms    | 1.94x |
+ * | 700   | 1074 ms  | 717 ms    | 1.50x |
+ * | 1000  | 1693 ms  | 1443 ms   | 1.17x |
+ * | 1500  | 2900 ms  | 3295 ms   | 0.88x |
  *
- * The last row is why `WASM_MAX_NODES` exists. The Rust sums every pair
- * exactly where d3 walks a Barnes-Hut quadtree, which is faster and more
- * accurate until the quadratic term catches up — at a thousand nodes d3 wins,
- * so above the threshold the JavaScript path is used and nothing regresses.
- * Raising the threshold means teaching the Rust a quadtree, not tuning a
- * number.
+ * The decline is not a cliff, it is the two complexities crossing. This sums
+ * every pair exactly, which is quadratic; d3 walks a Barnes-Hut quadtree,
+ * which is n log n. Rust's constant is far smaller, so it leads by a wide
+ * margin at small n and the ratio decays roughly as 1/n until the quadratic
+ * term catches up. Six points show that curve; an earlier four-point table
+ * made the last row look like a sudden failure, and it was also measured
+ * without warming either engine, which flattered d3's cold first call.
+ *
+ * `WASM_MAX_NODES` sits below the crossing. Raising it means teaching this a
+ * quadtree, not tuning the number.
  *
  * Loading is best-effort. A host whose bundler cannot serve the `.wasm`, or a
  * runtime without WebAssembly, gets the JavaScript path and no error.
@@ -35,7 +42,7 @@ export interface WasmSim {
 }
 
 /** Above this, d3's quadtree beats an exact sum. See the table above. */
-export const WASM_MAX_NODES = 600
+export const WASM_MAX_NODES = 1200
 
 let mod: WasmSim | null = null
 let tried = false
