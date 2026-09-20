@@ -98,8 +98,12 @@ const ZOOM_EXTENT: [number, number] = [0.2, 4]
  * High enough to clear a host's sticky header, which is the thing it would
  * otherwise render underneath, and deliberately not the maximum -- a host's own
  * modal should still be able to sit above it.
+ *
+ * Exported because a host that paints its own chrome over the canvas -- a
+ * progress ribbon, a busy veil -- has to know what to clear, and a number
+ * copied into a stylesheet goes stale the moment this one changes.
  */
-const EXPANDED_Z_INDEX = 9999
+export const EXPANDED_Z_INDEX = 9999
 
 /**
  * Where the detail popup sits, given a node, a camera and a viewport.
