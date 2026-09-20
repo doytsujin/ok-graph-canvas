@@ -15,7 +15,9 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   build: {
-    lib: { entry: 'src/index.ts', formats: ['es'], fileName: () => 'index.js' },
+    // Two entries: the SVG renderer, and the WebGL one behind a subpath so a
+    // consumer who never imports it never pulls sigma into their bundle.
+    lib: { entry: { index: 'src/index.ts', 'gl/index': 'src/gl/index.ts' }, formats: ['es'] },
     rollupOptions: {
       external: [
         /^react($|\/)/,
@@ -23,6 +25,8 @@ export default defineConfig({
         /^d3-/,
         /^@react-spring\//,
         /^lodash-es($|\/)/,
+        /^sigma($|\/)/,
+        /^graphology($|\/)/,
       ],
     },
     outDir: 'dist',

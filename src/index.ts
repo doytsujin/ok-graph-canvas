@@ -14,3 +14,6 @@ export { GraphEdge, type GraphEdgeProps } from './GraphEdge'
 export { FieldCanvas, EXPANDED_Z_INDEX, type FieldCanvasProps } from './FieldCanvas'
 export * from './trace'
 export { TraceLanes, type TraceLanesProps } from './TraceLanes'
+
+// The WebGL renderer is exported from a subpath so the SVG-only consumer
+// never pulls sigma into their bundle.
