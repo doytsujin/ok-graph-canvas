@@ -76,8 +76,8 @@ export type GraphNodeProps = {
  * primary and its neighbours read as the same size and the selection answers
  * only "what is connected", losing "what did I click".
  */
-const SELECTED_SCALE = 1.32
-const LINKED_SCALE = 1.08
+const SELECTED_SCALE = 1.45
+const LINKED_SCALE = 1.18
 const HOVER_SCALE = 0.06
 /**
  * How far the unselected field recedes.
@@ -85,9 +85,7 @@ const HOVER_SCALE = 0.06
  * Dim enough to read as background, not so dim that the shape of the graph is
  * lost — the point of selecting a node is to see what it sits among.
  */
-const RECEDED_OPACITY = 0.32
-const SELECTED_SHADOW = 'drop-shadow(0 0.045px 0.05px rgba(15, 23, 42, 0.5))'
-const LINKED_SHADOW = 'drop-shadow(0 0.025px 0.035px rgba(15, 23, 42, 0.33))'
+const RECEDED_OPACITY = 0.2
 
 /**
  * Memoised, because a field of a few hundred nodes re-renders all of them on
@@ -158,12 +156,6 @@ export const GraphNode = memo(function GraphNode(props: GraphNodeProps) {
       style={{
         cursor: 'pointer',
         opacity: dimmed ? RECEDED_OPACITY : 1,
-        // Shadow lengths are in user units, not screen pixels: this group is
-        // already scaled by NODE_BASE_SIZE, so a value written as `4px` would
-        // be drawn 56 times too large. These are the screen sizes divided
-        // through by that scale.
-        filter: selected ? SELECTED_SHADOW : highlighted ? LINKED_SHADOW : undefined,
-        transition: 'opacity 180ms ease-out',
       }}
       onMouseEnter={() => {
         setLocalHover(true)
@@ -187,6 +179,7 @@ export const GraphNode = memo(function GraphNode(props: GraphNodeProps) {
         id={node.id}
         color={color}
         highlighted={selected || highlighted}
+        elevation={selected ? 2 : highlighted ? 1 : 0}
         metricNumericValue={node.metric?.value ?? null}
         metricColor={node.metric?.color}
         metricFormattedValue={node.metric?.formatted}
@@ -196,14 +189,7 @@ export const GraphNode = memo(function GraphNode(props: GraphNodeProps) {
       {state && (
         <g transform="translate(0.72, -0.72)">
           {state.animated && (
-            <circle r={0.28} fill={state.color} opacity={0.25}>
-              <animate
-                attributeName="r"
-                values="0.22;0.36;0.22"
-                dur="1.6s"
-                repeatCount="indefinite"
-              />
-            </circle>
+            <circle className="gc-pulse" r={0.28} fill={state.color} opacity={0.25} />
           )}
           <circle r={0.17} fill={state.color} stroke="#fff" strokeWidth={0.05} />
           <title>{state.label}</title>

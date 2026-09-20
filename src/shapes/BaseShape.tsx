@@ -21,6 +21,7 @@ export function BaseShape(props: Props): React.ReactElement {
     id,
     color,
     highlighted = false,
+    elevation = 0,
     contrastMode = false,
     size = 1,
     metricNumericValue = null,
@@ -55,6 +56,14 @@ export function BaseShape(props: Props): React.ReactElement {
           })}
         </g>
       )}
+
+      {/* Elevation: an offset silhouette under the shape. No filter. */}
+      {elevation > 0 &&
+        renderTemplate({
+          fill: elevation === 2 ? 'rgba(15, 23, 42, 0.28)' : 'rgba(15, 23, 42, 0.16)',
+          stroke: 'none',
+          transform: `translate(0, ${elevation === 2 ? 0.1 : 0.05})`,
+        })}
 
       {/* background fill */}
       {renderTemplate({

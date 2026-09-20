@@ -131,6 +131,13 @@ function placeDetail(
 }
 
 /** Width of the detail popup, in screen px. */
+const PULSE_CSS = `
+.gc-pulse { transform-box: fill-box; transform-origin: center; animation: gc-pulse 1.6s ease-in-out infinite; }
+@keyframes gc-pulse { 0%,100% { transform: scale(0.8); opacity: 0.25 } 50% { transform: scale(1.3); opacity: 0.12 } }
+@media (prefers-reduced-motion: reduce) { .gc-pulse { animation: none } }
+`
+
+/** Width of the detail popup, in screen px. */
 const DETAIL_WIDTH = 280
 /** Gap between the selected node's edge and the detail popup, in screen px. */
 const DETAIL_GAP = 14
@@ -208,6 +215,10 @@ export function FieldCanvas(props: FieldCanvasProps) {
    * changed onto the scene group and nudges the popup. Render reads the ref,
    * so a re-render for some other reason still paints the current camera.
    */
+  // Read inside a stable callback, so the handler identity does not change
+  // with the selection and undo the memoisation of every node.
+  const selectedIdRef = useRef<string | null>(selectedId)
+  selectedIdRef.current = selectedId
   const transformRef = useRef<ZoomTransform>(zoomIdentity)
   const sceneRef = useRef<SVGGElement | null>(null)
   const cardRef = useRef<HTMLDivElement | null>(null)
@@ -477,7 +488,17 @@ export function FieldCanvas(props: FieldCanvasProps) {
    * and took five seconds to paint. The children are memoised now, and that is
    * only worth anything if their props actually compare equal.
    */
-  const handleNodeClick = useCallback((id: string) => onSelect?.(id), [onSelect])
+  /**
+   * Clicking the selected node clears the selection.
+   *
+   * Otherwise the only way out is to find empty canvas, which on a dense field
+   * there may not be — and the node you want to let go of is the one your
+   * pointer is already on.
+   */
+  const handleNodeClick = useCallback(
+    (id: string) => onSelect?.(id === selectedIdRef.current ? null : id),
+    [onSelect],
+  )
   const handleNodeHover = useCallback((id: string | null) => setHoverId(id), [])
   const handleLinkClick = useCallback((id: string) => onSelectLink?.(id), [onSelectLink])
 
@@ -671,6 +692,20 @@ export function FieldCanvas(props: FieldCanvasProps) {
         </div>
       )}
       <svg ref={svgRef} width={size.w} height={size.h} style={{ display: 'block' }}>
+        {/*
+          One stylesheet, inside the SVG, so a host still imports no CSS for
+          this component.
+
+          It replaces a SMIL `<animate>` that every live node carried. SMIL
+          animates the circle's `r`, which is geometry: each frame re-rasterises
+          the shape and, in Firefox, invalidates a region of a tree that may
+          hold thousands of elements. A CSS transform animates on the
+          compositor and touches no geometry at all.
+
+          `prefers-reduced-motion` is honoured because a pulsing badge is
+          decoration, and the state it marks is legible without it.
+        */}
+        <style>{PULSE_CSS}</style>
         <g
           ref={sceneRef}
           transform={`translate(${transformRef.current.x + size.w / 2}, ${
