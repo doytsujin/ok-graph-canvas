@@ -178,6 +178,25 @@ should not acquire that ability through an upgrade. Two things a host owns:
 - **Stacking.** The expanded canvas sits at `z-index: 9999`, which clears a
   sticky header and stays below a host modal that asks for more.
 
+### What selection looks like
+
+Clicking a node says two things — this is the one I picked, and these are the
+ones it reaches — so the canvas draws both. The selected node rises furthest and
+carries the strongest shadow, its neighbours rise with it, and everything else
+recedes to about a third opacity along with the links that do not touch the
+selection. Nothing recedes when nothing is selected.
+
+The gap between the primary and its neighbours is deliberately wide. Drawn at
+similar sizes they answer only "what is connected" and lose "what did I click".
+
+Two implementation notes for anyone changing it. The shadow lengths are in
+**user units, not screen pixels** — the node group is already scaled by
+`NODE_BASE_SIZE`, so a value written as `4px` is drawn 56 times too large. And
+the paint order comes from sorting one keyed list, not from moving nodes into
+separate groups: SVG has no z-index so what is drawn last is on top, but
+re-parenting a node unmounts it and the spring carrying its position starts
+over on every selection change.
+
 ### Detail while expanded
 
 Expanding covers the page, and it takes the host's inspector with it — typically

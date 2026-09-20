@@ -14,6 +14,15 @@ export type GraphEdgeProps = {
   active?: boolean
   /** Link does not participate in the active projection. */
   dimmed?: boolean
+  /**
+   * Pushed back because something else is selected.
+   *
+   * Deliberately not `dimmed`. That one means the active projection excluded
+   * this link, and it also stops the link being clickable — correct for a link
+   * taking no part in the layout, wrong for one that is merely not the thing
+   * you just clicked. A receded link is still yours to select.
+   */
+  receded?: boolean
   onHover?: (id: string | null) => void
   onClick?: (id: string) => void
 }
@@ -63,6 +72,7 @@ export function GraphEdge(props: GraphEdgeProps) {
     highlighted = false,
     active = false,
     dimmed = false,
+    receded = false,
     onHover,
     onClick,
   } = props
@@ -77,7 +87,11 @@ export function GraphEdge(props: GraphEdgeProps) {
 
   const v = encodeLink({ envelope }, { highlighted, active })
   const markerId = `arrow-${id.replace(/[^A-Za-z0-9_-]/g, '_')}`
-  const opacity = dimmed ? v.strokeOpacity * 0.25 : v.strokeOpacity
+  const opacity = dimmed
+    ? v.strokeOpacity * 0.25
+    : receded
+      ? v.strokeOpacity * 0.3
+      : v.strokeOpacity
 
   return (
     <g style={{ pointerEvents: dimmed ? 'none' : undefined }}>

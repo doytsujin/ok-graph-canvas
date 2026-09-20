@@ -398,6 +398,30 @@ export function FieldCanvas(props: FieldCanvasProps) {
     return set
   }, [hoverId, selectedId, adjacency])
 
+  /**
+   * Paint order, by reordering keyed children rather than by regrouping them.
+   *
+   * SVG has no z-index: what is drawn last is drawn on top, so a raised node
+   * under an unraised neighbour still looks sunken. Sorting the array puts the
+   * selected node last, its neighbours next-to-last, and the receded field
+   * beneath both.
+   *
+   * It matters that this is a sort of one keyed list and not two lists in two
+   * groups. React reorders keyed children in place; moving a node between
+   * parents would unmount and remount it, and the spring carrying its position
+   * would start over every time the selection changed.
+   */
+  const paintOrder = useMemo(() => {
+    const rank = (id: string) => (id === selectedId ? 2 : highlightSet.has(id) ? 1 : 0)
+    return Object.values(layout.nodes).sort((a, b) => rank(a.id) - rank(b.id))
+  }, [layout.nodes, selectedId, highlightSet])
+
+  const linkPaintOrder = useMemo(() => {
+    const rank = (e: (typeof layout.links)[number]) =>
+      highlightSet.has(e.source) && highlightSet.has(e.target) ? 1 : 0
+    return [...layout.links].sort((a, b) => rank(a) - rank(b))
+  }, [layout.links, highlightSet])
+
   return (
     // `position: relative` is not decoration. The Fit control is absolutely
     // positioned, so without a containing block here it escapes to whatever
@@ -579,7 +603,7 @@ export function FieldCanvas(props: FieldCanvasProps) {
             transform.y + size.h / 2
           }) scale(${transform.k})`}
         >
-          {layout.links.map((e) => (
+          {linkPaintOrder.map((e) => (
             <GraphEdge
               key={e.id}
               id={e.id}
@@ -593,11 +617,15 @@ export function FieldCanvas(props: FieldCanvasProps) {
                 (highlightSet.has(e.source) && highlightSet.has(e.target))
               }
               dimmed={!e.included}
+              receded={
+                highlightSet.size > 0 &&
+                !(highlightSet.has(e.source) && highlightSet.has(e.target))
+              }
               onClick={onSelectLink ? (id) => onSelectLink(id) : undefined}
             />
           ))}
 
-          {Object.values(layout.nodes).map((n) => (
+          {paintOrder.map((n) => (
             <GraphNode
               key={n.id}
               node={n}
@@ -608,7 +636,10 @@ export function FieldCanvas(props: FieldCanvasProps) {
               labelColor={labelColorForNode?.(n)}
               shapeResolver={shapeResolver}
               selected={selectedId === n.id}
-              highlighted={highlightSet.has(n.id)}
+              highlighted={highlightSet.has(n.id) && n.id !== selectedId}
+              // Everything outside the selection recedes. Nothing recedes when
+              // nothing is selected, so an untouched canvas is at full strength.
+              dimmed={highlightSet.size > 0 && !highlightSet.has(n.id)}
               hovered={hoverId === n.id}
               pulsing={pulsingIds?.has(n.id) ?? false}
               onClick={(id) => onSelect?.(id)}

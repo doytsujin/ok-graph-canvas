@@ -69,6 +69,26 @@ export type GraphNodeProps = {
  * rather than cutting — which is the whole reason node identity is preserved
  * across projections upstream in `useFieldLayout`.
  */
+/**
+ * Raised above its neighbours, which are themselves raised above the field.
+ *
+ * The gap between the two is deliberately wide. At 1.24 against 1.10 the
+ * primary and its neighbours read as the same size and the selection answers
+ * only "what is connected", losing "what did I click".
+ */
+const SELECTED_SCALE = 1.32
+const LINKED_SCALE = 1.08
+const HOVER_SCALE = 0.06
+/**
+ * How far the unselected field recedes.
+ *
+ * Dim enough to read as background, not so dim that the shape of the graph is
+ * lost — the point of selecting a node is to see what it sits among.
+ */
+const RECEDED_OPACITY = 0.32
+const SELECTED_SHADOW = 'drop-shadow(0 0.045px 0.05px rgba(15, 23, 42, 0.5))'
+const LINKED_SHADOW = 'drop-shadow(0 0.025px 0.035px rgba(15, 23, 42, 0.33))'
+
 export function GraphNode(props: GraphNodeProps) {
   const {
     node,
@@ -93,11 +113,20 @@ export function GraphNode(props: GraphNodeProps) {
   const [localHover, setLocalHover] = useState(false)
   const isHover = hovered || localHover
 
+  /**
+   * Three tiers, not two.
+   *
+   * A selection says two things at once — this is the node I picked, and these
+   * are the ones it reaches. Drawing both at one size answers the second and
+   * loses the first, so the primary stays visibly the largest and its
+   * neighbours rise with it.
+   */
+  const lift = selected ? SELECTED_SCALE : highlighted ? LINKED_SCALE : 1
   // Snapshot-spring transitions (Scope feel) — damping ~18, stiffness ~100.
   const styles = useSpring({
     x,
     y,
-    scale: selected ? 1.15 : isHover ? 1.06 : 1,
+    scale: isHover ? lift + HOVER_SCALE : lift,
     config: { tension: 100, friction: 18, precision: 0.1 },
   })
 
@@ -120,7 +149,16 @@ export function GraphNode(props: GraphNodeProps) {
             styles.scale.get() * NODE_BASE_SIZE
           })`,
       )}
-      style={{ cursor: 'pointer', opacity: dimmed ? 0.28 : 1 }}
+      style={{
+        cursor: 'pointer',
+        opacity: dimmed ? RECEDED_OPACITY : 1,
+        // Shadow lengths are in user units, not screen pixels: this group is
+        // already scaled by NODE_BASE_SIZE, so a value written as `4px` would
+        // be drawn 56 times too large. These are the screen sizes divided
+        // through by that scale.
+        filter: selected ? SELECTED_SHADOW : highlighted ? LINKED_SHADOW : undefined,
+        transition: 'opacity 180ms ease-out',
+      }}
       onMouseEnter={() => {
         setLocalHover(true)
         onHover?.(node.id)
