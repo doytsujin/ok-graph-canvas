@@ -50,8 +50,17 @@ if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
   tagged="$(git rev-parse "refs/tags/$tag^{commit}")"
   head="$(git rev-parse HEAD)"
   if [ "$tagged" != "$head" ]; then
-    echo "refusing: $tag points at $tagged, HEAD is $head" >&2
-    exit 1
+    # Also a warning on a dry run. After a release HEAD moves on while the tag
+    # correctly stays put, so this is the ordinary state of the repository
+    # between releases and refusing on it would make --dry-run unusable there.
+    # A real publish still stops: the version is unpublished by then, so a tag
+    # that already exists and points elsewhere is a genuine conflict.
+    if [ -n "$DRY" ]; then
+      echo "note: $tag points at ${tagged:0:7}, HEAD is ${head:0:7}"
+    else
+      echo "refusing: $tag points at $tagged, HEAD is $head" >&2
+      exit 1
+    fi
   fi
 fi
 
