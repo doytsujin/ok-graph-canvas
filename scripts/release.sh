@@ -31,10 +31,16 @@ if [ -n "$(git status --porcelain)" ]; then
 fi
 
 # Publishing a version that is already on the registry fails anyway, but it
-# fails after the build and with a less clear message.
+# fails after the build and with a less clear message. A dry run only warns:
+# the point of a dry run is to check the build BEFORE bumping the version, so
+# refusing here would make it useless exactly when it is wanted.
 if npm view "$name@$version" version >/dev/null 2>&1; then
-  echo "refusing: $name@$version is already published" >&2
-  exit 1
+  if [ -n "$DRY" ]; then
+    echo "note: $name@$version is already published; a real release needs a bump"
+  else
+    echo "refusing: $name@$version is already published" >&2
+    exit 1
+  fi
 fi
 
 # A tag that disagrees with package.json publishes a version nobody asked for,
