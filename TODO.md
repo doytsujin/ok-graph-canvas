@@ -14,8 +14,10 @@ See [`README.md`](README.md) for the API and the measured numbers.
 
 ## 2. Release
 
-- [ ] **Configure the trusted publisher on npmjs.com** (GitHub Actions / `doytsujin` / `ok-graph-canvas` / `publish.yml` / no environment). Releases have so far gone out on the bootstrap token and every `v*` tag leaves a failed CI run behind it, because OIDC mints a token npm does not recognize and answers `404` on `PUT`. See [`RELEASING.md`](RELEASING.md).
-- [ ] **Revoke the bootstrap token** once that is done. `~/.npmjs_key` is still live and world-readable.
+Publishing runs from a maintainer's machine — `npm run release`, guards in [`scripts/release.sh`](scripts/release.sh). The publish workflow is gone; a `v*` tag is a marker and triggers nothing. See [`RELEASING.md`](RELEASING.md).
+
+- [ ] **Packages carry no provenance.** That went with the workflow and cannot be reproduced off CI: the attestation signs a CI identity, and there is not one here. Restoring it means configuring the trusted publisher on npmjs.com (GitHub Actions / `doytsujin` / `ok-graph-canvas` / no environment) and bringing the workflow back out of the history.
+- [ ] **A write-capable npm token now lives on a machine indefinitely**, because it is the mechanism rather than a bootstrap step. `~/.npmjs_key` should stay at mode 600 and is worth rotating on a schedule.
 
 ## Traps worth not rediscovering
 

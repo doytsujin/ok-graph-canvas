@@ -58,7 +58,8 @@
     "prepublishOnly": "npm run build && npm run check",
     "check:schema": "esbuild check-schema.ts --bundle --platform=node --format=cjs --outfile=.schema-check.cjs --log-level=warning && node .schema-check.cjs",
     "bench": "esbuild bench.ts --bundle --platform=node --format=cjs --outfile=.bench.cjs --log-level=warning && node .bench.cjs",
-    "build:wasm": "cd rust/field-layout && wasm-pack build --release --target web --out-dir ../../src/wasm --out-name field_layout && rm -f ../../src/wasm/.gitignore"
+    "build:wasm": "cd rust/field-layout && wasm-pack build --release --target web --out-dir ../../src/wasm --out-name field_layout && rm -f ../../src/wasm/.gitignore",
+    "release": "./scripts/release.sh"
   },
   "peerDependencies": {
     "@react-spring/web": ">=9",
